@@ -1,0 +1,114 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id               String            @id @default(uuid())
+  name             String
+  email            String            @unique
+  password         String?
+  premiumStatus    String            @default("free") // "free" | "premium" | "professional"
+  institution      String
+  avatar           String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  createdSubjects  Subject[]         @relation("SubjectCreator")
+  lecturedSubjects SubjectLecturer[]
+}
+
+model Subject {
+  id          String            @id @default(uuid())
+  name        String
+  room        String?
+  color       String?
+  description String?           @db.Text
+  creatorId   String
+  creator     User              @relation("SubjectCreator", fields: [creatorId], references: [id])
+  deletedBy   String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  deletedAt   DateTime?
+  lecturers   SubjectLecturer[]
+  schedules   SubjectSchedule[]
+  modules     Module[]
+  events      LmsEvent[]
+}
+
+model SubjectLecturer {
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([subjectId, userId])
+}
+
+model SubjectSchedule {
+  id        String   @id @default(uuid())
+  day       String
+  startTime String
+  endTime   String
+  room      String?
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+}
+
+model Module {
+  id        String    @id @default(uuid())
+  title     String
+  desc      String            @db.Text
+  date      DateTime
+  subjectId String
+  subject   Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  lessons   Lesson[]
+}
+
+model Lesson {
+  id           String    @id @default(uuid())
+  title        String
+  desc         String    @db.Text
+  homeworkFile String?
+  openDate     DateTime
+  closeDate    DateTime
+  closeType    String    @default("open") // "restrict" | "open"
+  moduleId     String
+  module       Module    @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+}
+
+model LmsEvent {
+  id                   String    @id @default(uuid())
+  title                String
+  subtitle             String?
+  timeStart            String
+  timeEnd              String
+  dayIndex             Int
+  color                String
+  tagText              String?
+  tagType              String?
+  linkText             String?
+  linkUrl              String?
+  participantsInitials String?   // Comma-separated initials
+  participantsCount    Int?
+  status               String?   // "in-progress" | "joinable" | "normal"
+  description          String?   @db.Text
+  image                String?
+  subjectId            String?
+  subject              Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  deletedAt            DateTime?
+}
