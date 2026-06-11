@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { subjectService } from "../services/subject.service";
+import prisma from "../config/prisma";
 
 export class SubjectController {
   async getAll(req: Request, res: Response) {
@@ -62,6 +63,34 @@ export class SubjectController {
       const subject = await subjectService.joinSubject(req.params.id, userId);
       if (!subject) return res.status(404).json({ error: "Subject not found" });
       res.json(subject);
+    } catch (e: unknown) {
+      const err = e as Error;
+      res.status(500).json({ error: err.message });
+    }
+  }
+
+  async kickParticipant(req: Request, res: Response) {
+    try {
+      const subjectId = req.params.id;
+      const userId = req.params.userId;
+      const ownerId = (req as any).user?.id;
+
+      const subject = await prisma.subject.findFirst({
+        where: { id: subjectId, creatorId: ownerId }
+      });
+      if (!subject) {
+        return res.status(403).json({ error: "Only the subject creator can kick participants." });
+      }
+
+      await prisma.subjectParticipant.delete({
+        where: {
+          subjectId_userId: {
+            subjectId,
+            userId
+          }
+        }
+      });
+      res.json({ message: "Participant kicked successfully" });
     } catch (e: unknown) {
       const err = e as Error;
       res.status(500).json({ error: err.message });

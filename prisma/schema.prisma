@@ -1,13 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "mysql"
+  provider  = "postgresql"
 }
 
 model User {
@@ -15,7 +12,7 @@ model User {
   name             String
   email            String            @unique
   password         String?
-  premiumStatus    String            @default("free") // "free" | "premium" | "professional"
+  premiumStatus    String            @default("free")
   institution      String
   avatar           String
   createdAt        DateTime          @default(now())
@@ -82,10 +79,11 @@ model Lesson {
   id           String    @id @default(uuid())
   title        String
   desc         String    @db.Text
+  type         String    @default("learning")
   homeworkFile String?
   openDate     DateTime
   closeDate    DateTime
-  closeType    String    @default("open") // "restrict" | "open"
+  closeType    String    @default("open")
   moduleId     String
   module       Module    @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   createdAt    DateTime  @default(now())
@@ -105,9 +103,9 @@ model LmsEvent {
   tagType              String?
   linkText             String?
   linkUrl              String?
-  participantsInitials String?   // Comma-separated initials
+  participantsInitials String?
   participantsCount    Int?
-  status               String?   // "in-progress" | "joinable" | "normal"
+  status               String?
   description          String?   @db.Text
   image                String?
   subjectId            String?

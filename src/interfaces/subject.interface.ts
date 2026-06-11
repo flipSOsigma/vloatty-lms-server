@@ -53,5 +53,6 @@ export interface IUpdateSubjectInput {
   createdBy?: string;
   lecturers?: { userId?: string; name?: string; email?: string }[];
   schedules?: ISubjectSchedule[];
+  modules?: any[];
 }
 

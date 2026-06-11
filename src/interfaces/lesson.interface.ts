@@ -2,6 +2,7 @@ export interface ILesson {
   id: string;
   title: string;
   desc: string;
+  type: "assignment" | "learning" | "quizzes";
   homeworkFile?: string | null;
   openDate: Date | string;
   closeDate: Date | string;

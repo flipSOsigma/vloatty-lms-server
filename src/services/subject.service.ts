@@ -199,7 +199,17 @@ export class SubjectService {
   }
 
   async update(id: string, data: IUpdateSubjectInput): Promise<ISubject | null> {
-    const { lecturers, schedules, createdBy, modules, ...subjectData } = data as any;
+    const { name, room, color, description, isOpen, category, deletedBy, deletedAt, lecturers, schedules, createdBy, modules } = data as any;
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (room !== undefined) updateData.room = room;
+    if (color !== undefined) updateData.color = color;
+    if (description !== undefined) updateData.description = description;
+    if (isOpen !== undefined) updateData.isOpen = isOpen;
+    if (category !== undefined) updateData.category = category;
+    if (deletedBy !== undefined) updateData.deletedBy = deletedBy;
+    if (deletedAt !== undefined) updateData.deletedAt = deletedAt;
+    if (createdBy !== undefined) updateData.creatorId = createdBy;
 
     const resolvedLecturerIds: string[] = [];
     if (lecturers) {
@@ -233,11 +243,54 @@ export class SubjectService {
         await tx.subjectSchedule.deleteMany({ where: { subjectId: id } });
       }
 
+      if (modules) {
+        for (const m of modules) {
+          const moduleData = {
+            title: m.title,
+            desc: m.desc || "",
+            date: m.date ? new Date(m.date) : new Date(),
+          };
+
+          await tx.module.upsert({
+            where: { id: m.id },
+            update: moduleData,
+            create: {
+              id: m.id,
+              ...moduleData,
+              subjectId: id,
+            },
+          });
+
+          if (m.lessons) {
+            for (const l of m.lessons) {
+              const lessonData = {
+                title: l.title,
+                desc: l.desc || "",
+                type: l.type || "learning",
+                homeworkFile: l.homeworkFile || null,
+                openDate: l.openDate ? new Date(l.openDate) : new Date(),
+                closeDate: l.closeDate ? new Date(l.closeDate) : new Date(),
+                closeType: l.closeType || "open",
+              };
+
+              await tx.lesson.upsert({
+                where: { id: l.id },
+                update: lessonData,
+                create: {
+                  id: l.id,
+                  ...lessonData,
+                  moduleId: m.id,
+                },
+              });
+            }
+          }
+        }
+      }
+
       const updated = await tx.subject.update({
         where: { id },
         data: {
-          ...subjectData,
-          ...(createdBy ? { creatorId: createdBy } : {}),
+          ...updateData,
           lecturers: resolvedLecturerIds.length > 0 ? {
             create: resolvedLecturerIds.map((userId) => ({
               userId
@@ -264,7 +317,13 @@ export class SubjectService {
               user: true
             }
           },
-          schedules: true
+          schedules: true,
+          modules: {
+            where: { deletedAt: null },
+            include: {
+              lessons: { where: { deletedAt: null } }
+            }
+          }
         }
       });
       return updated;

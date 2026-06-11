@@ -1,36 +1,8 @@
-import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+import "dotenv/config";
+import prisma from "../src/config/prisma";
 import fs from "fs";
 import path from "path";
 import bcrypt from "bcryptjs";
-
-const dbUrl = process.env.DATABASE_URL || "mysql://root:mysqldb@127.0.0.1:3306/lms_db?allowPublicKeyRetrieval=true";
-const urlPattern = /mysql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/;
-const match = dbUrl.match(urlPattern);
-
-let adapterConfig = {
-  host: "127.0.0.1",
-  port: 3306,
-  user: "root",
-  password: "mysqldb",
-  database: "lms_db"
-};
-
-if (match) {
-  adapterConfig = {
-    user: match[1],
-    password: match[2],
-    host: match[3],
-    port: parseInt(match[4]),
-    database: match[5].split("?")[0]
-  };
-}
-
-const adapter = new PrismaMariaDb({
-  ...adapterConfig,
-  allowPublicKeyRetrieval: true
-});
-const prisma = new PrismaClient({ adapter });
 
 async function main() {
   await prisma.subjectParticipant.deleteMany();
@@ -58,7 +30,7 @@ async function main() {
     }
   });
 
-  const lecturersMock = {
+  const lecturersMock: { [key: string]: { name: string; email: string } } = {
     "u_olivia_123": { name: "Dr. Olivia", email: "olivia@vloatty.edu" },
     "u_feynman_123": { name: "Prof. Richard Feynman", email: "feynman@vloatty.edu" },
     "u_curie_123": { name: "Dr. Marie Curie", email: "curie@vloatty.edu" },
@@ -205,6 +177,7 @@ async function main() {
 
 main()
   .catch((e) => {
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {
