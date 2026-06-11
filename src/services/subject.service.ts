@@ -92,7 +92,7 @@ export class SubjectService {
         }
       }
     });
-    return subjects.map((s) => this.mapSubject(s as unknown as PrismaSubjectOutput) as ISubject);
+    return subjects.map((s: any) => this.mapSubject(s as unknown as PrismaSubjectOutput) as ISubject);
   }
 
   async getById(id: string): Promise<ISubject | null> {
@@ -235,7 +235,7 @@ export class SubjectService {
       }
     }
 
-    const subject = await prisma.$transaction(async (tx) => {
+    const subject = await prisma.$transaction(async (tx: any) => {
       if (lecturers) {
         await tx.subjectLecturer.deleteMany({ where: { subjectId: id } });
       }
