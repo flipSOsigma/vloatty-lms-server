@@ -52,6 +52,21 @@ export class SubjectController {
       res.status(500).json({ error: err.message });
     }
   }
+
+  async join(req: Request, res: Response) {
+    try {
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      const subject = await subjectService.joinSubject(req.params.id, userId);
+      if (!subject) return res.status(404).json({ error: "Subject not found" });
+      res.json(subject);
+    } catch (e: unknown) {
+      const err = e as Error;
+      res.status(500).json({ error: err.message });
+    }
+  }
 }
 
 export const subjectController = new SubjectController();

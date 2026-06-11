@@ -11,13 +11,29 @@ interface SubjectLecturerWithUser {
   } | null;
 }
 
+interface SubjectParticipantWithUser {
+  userId: string;
+  user?: {
+    name: string;
+    email: string;
+    avatar: string;
+  } | null;
+}
+
 interface PrismaSubjectOutput {
   id: string;
   name: string;
   room: string | null;
   color: string | null;
   description: string | null;
+  isOpen: boolean;
+  category: string;
   creatorId: string;
+  creator?: {
+    name: string;
+    email: string;
+    avatar: string;
+  } | null;
   deletedBy: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -25,19 +41,29 @@ interface PrismaSubjectOutput {
   lecturers?: SubjectLecturerWithUser[];
   schedules?: ISubjectSchedule[];
   modules?: IModule[];
+  participants?: SubjectParticipantWithUser[];
 }
 
 export class SubjectService {
   private mapSubject(subject: PrismaSubjectOutput | null): ISubject | null {
     if (!subject) return null;
-    const { lecturers, creatorId, ...rest } = subject;
+    const { lecturers, participants, creatorId, creator, ...rest } = subject;
     return {
       ...rest,
       createdBy: creatorId,
+      creatorName: creator?.name || "",
+      creatorEmail: creator?.email || "",
+      creatorAvatar: creator?.avatar || "",
       lecturers: lecturers ? lecturers.map((sl) => ({
         userId: sl.userId,
         name: sl.user?.name || "",
         email: sl.user?.email || ""
+      })) : [],
+      participants: participants ? participants.map((p) => ({
+        userId: p.userId,
+        name: p.user?.name || "",
+        email: p.user?.email || "",
+        avatar: p.user?.avatar || ""
       })) : []
     };
   }
@@ -46,7 +72,13 @@ export class SubjectService {
     const subjects = await prisma.subject.findMany({
       where: { deletedAt: null },
       include: {
+        creator: true,
         lecturers: {
+          include: {
+            user: true
+          }
+        },
+        participants: {
           include: {
             user: true
           }
@@ -67,7 +99,13 @@ export class SubjectService {
     const subject = await prisma.subject.findFirst({
       where: { id, deletedAt: null },
       include: {
+        creator: true,
         lecturers: {
+          include: {
+            user: true
+          }
+        },
+        participants: {
           include: {
             user: true
           }
@@ -137,7 +175,13 @@ export class SubjectService {
         } : undefined
       },
       include: {
+        creator: true,
         lecturers: {
+          include: {
+            user: true
+          }
+        },
+        participants: {
           include: {
             user: true
           }
@@ -209,7 +253,13 @@ export class SubjectService {
           } : undefined
         },
         include: {
+          creator: true,
           lecturers: {
+            include: {
+              user: true
+            }
+          },
+          participants: {
             include: {
               user: true
             }
@@ -229,6 +279,26 @@ export class SubjectService {
       data: { deletedAt: new Date() }
     });
     return result as unknown as ISubject;
+  }
+
+  async joinSubject(subjectId: string, userId: string): Promise<ISubject | null> {
+    const existing = await prisma.subjectParticipant.findUnique({
+      where: {
+        subjectId_userId: {
+          subjectId,
+          userId
+        }
+      }
+    });
+    if (!existing) {
+      await prisma.subjectParticipant.create({
+        data: {
+          subjectId,
+          userId
+        }
+      });
+    }
+    return this.getById(subjectId);
   }
 }
 export const subjectService = new SubjectService();

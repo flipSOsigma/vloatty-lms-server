@@ -22,24 +22,28 @@ model User {
   updatedAt        DateTime          @updatedAt
   createdSubjects  Subject[]         @relation("SubjectCreator")
   lecturedSubjects SubjectLecturer[]
+  participatedSubjects SubjectParticipant[]
 }
 
 model Subject {
-  id          String            @id @default(uuid())
-  name        String
-  room        String?
-  color       String?
-  description String?           @db.Text
-  creatorId   String
-  creator     User              @relation("SubjectCreator", fields: [creatorId], references: [id])
-  deletedBy   String?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  deletedAt   DateTime?
-  lecturers   SubjectLecturer[]
-  schedules   SubjectSchedule[]
-  modules     Module[]
-  events      LmsEvent[]
+  id           String               @id @default(uuid())
+  name         String
+  room         String?
+  color        String?
+  description  String?              @db.Text
+  isOpen       Boolean              @default(false)
+  category     String               @default("Lecture")
+  creatorId    String
+  creator      User                 @relation("SubjectCreator", fields: [creatorId], references: [id])
+  deletedBy    String?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  deletedAt    DateTime?
+  lecturers    SubjectLecturer[]
+  schedules    SubjectSchedule[]
+  modules      Module[]
+  events       LmsEvent[]
+  participants SubjectParticipant[]
 }
 
 model SubjectLecturer {
@@ -111,4 +115,15 @@ model LmsEvent {
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
   deletedAt            DateTime?
+}
+
+model SubjectParticipant {
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@id([subjectId, userId])
 }

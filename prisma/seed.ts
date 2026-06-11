@@ -4,12 +4,12 @@ import fs from "fs";
 import path from "path";
 import bcrypt from "bcryptjs";
 
-const dbUrl = process.env.DATABASE_URL || "mysql://root:mysqldb@localhost:3306/lms_db";
+const dbUrl = process.env.DATABASE_URL || "mysql://root:mysqldb@127.0.0.1:3306/lms_db?allowPublicKeyRetrieval=true";
 const urlPattern = /mysql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/;
 const match = dbUrl.match(urlPattern);
 
 let adapterConfig = {
-  host: "localhost",
+  host: "127.0.0.1",
   port: 3306,
   user: "root",
   password: "mysqldb",
@@ -22,17 +22,18 @@ if (match) {
     password: match[2],
     host: match[3],
     port: parseInt(match[4]),
-    database: match[5]
+    database: match[5].split("?")[0]
   };
 }
 
-const adapter = new PrismaMariaDb(adapterConfig);
+const adapter = new PrismaMariaDb({
+  ...adapterConfig,
+  allowPublicKeyRetrieval: true
+});
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log("Seeding database...");
-
-  // 1. Clean existing records
+  await prisma.subjectParticipant.deleteMany();
   await prisma.lmsEvent.deleteMany();
   await prisma.lesson.deleteMany();
   await prisma.module.deleteMany();
@@ -40,10 +41,8 @@ async function main() {
   await prisma.subject.deleteMany();
   await prisma.user.deleteMany();
 
-  // Hash default password
   const hashedPassword = await bcrypt.hash("password123", 10);
 
-  // 2. Read user.json
   const userPath = path.resolve(__dirname, "../../client/public/data/user.json");
   const userData = JSON.parse(fs.readFileSync(userPath, "utf-8"));
   
@@ -58,9 +57,7 @@ async function main() {
       avatar: userData.user.avatar || "",
     }
   });
-  console.log(`Created main user: ${mainUser.name}`);
 
-  // Create mock lecturer users as well to satisfy foreign keys / database completeness
   const lecturersMock = {
     "u_olivia_123": { name: "Dr. Olivia", email: "olivia@vloatty.edu" },
     "u_feynman_123": { name: "Prof. Richard Feynman", email: "feynman@vloatty.edu" },
@@ -85,14 +82,12 @@ async function main() {
       }
     });
   }
-  console.log("Seeded mock faculty users.");
 
-  // 3. Read subjects.json
   const subjectsPath = path.resolve(__dirname, "../../client/public/data/subjects.json");
   const subjectsData = JSON.parse(fs.readFileSync(subjectsPath, "utf-8"));
 
   for (const sub of subjectsData) {
-    const creatorId = sub.createdBy === mainUser.id ? mainUser.id : mainUser.id;
+    const creatorId = mainUser.id;
 
     const subject = await prisma.subject.create({
       data: {
@@ -111,9 +106,17 @@ async function main() {
       }
     });
 
-    console.log(`Creating subject: ${subject.name}`);
+    const mockUserIds = Object.keys(lecturersMock);
+    const participantsToCreate = mockUserIds.slice(0, 3);
+    for (const userId of participantsToCreate) {
+      await prisma.subjectParticipant.create({
+        data: {
+          subjectId: subject.id,
+          userId
+        }
+      });
+    }
 
-    // Create schedules
     if (sub.schedules) {
       for (const sch of sub.schedules) {
         await prisma.subjectSchedule.create({
@@ -128,7 +131,6 @@ async function main() {
       }
     }
 
-    // Create modules and lessons
     if (sub.modules) {
       for (const mod of sub.modules) {
         const module = await prisma.module.create({
@@ -167,7 +169,6 @@ async function main() {
     }
   }
 
-  // 4. Derive/Seed LmsEvents from schedules
   const dayMap: { [key: string]: number } = {
     "Monday": 0,
     "Tuesday": 1,
@@ -200,13 +201,10 @@ async function main() {
       }
     }
   }
-
-  console.log("Database seeded successfully!");
 }
 
 main()
   .catch((e) => {
-    console.error("Error seeding database:", e);
     process.exit(1);
   })
   .finally(async () => {
