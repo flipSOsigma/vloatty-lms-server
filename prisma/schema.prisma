@@ -20,13 +20,20 @@ model User {
   createdSubjects  Subject[]         @relation("SubjectCreator")
   lecturedSubjects SubjectLecturer[]
   participatedSubjects SubjectParticipant[]
+  institutionId     String?
+  linkedInstitution Institution?      @relation(fields: [institutionId], references: [id], onDelete: SetNull)
+  institutionRole   String?
+  memberships       InstitutionMember[]
+  uploadedFiles     InstitutionFile[] @relation("FileUploader")
+  subjectFiles      SubjectFile[]     @relation("SubjectFileUploader")
+  quizAttempts      QuizAttempt[]
 }
 
 model Subject {
   id           String               @id @default(uuid())
   name         String
   room         String?
-  color        String?
+  thumbnail    String?
   description  String?              @db.Text
   isOpen       Boolean              @default(false)
   category     String               @default("Lecture")
@@ -41,6 +48,9 @@ model Subject {
   modules      Module[]
   events       LmsEvent[]
   participants SubjectParticipant[]
+  institutionId    String?
+  institution      Institution?      @relation(fields: [institutionId], references: [id], onDelete: SetNull)
+  files            SubjectFile[]
 }
 
 model SubjectLecturer {
@@ -89,6 +99,26 @@ model Lesson {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
+  files        SubjectFile[]
+  quiz         Quiz?
+}
+
+model SubjectFile {
+  id           String    @id @default(uuid())
+  name         String
+  url          String
+  mimeType     String
+  sizeBytes    Int
+  category     String    @default("Attachment") // "Attachment" or "Submission"
+  uploadedById String
+  uploadedBy   User      @relation("SubjectFileUploader", fields: [uploadedById], references: [id], onDelete: Cascade)
+  subjectId    String
+  subject      Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  lessonId     String?
+  lesson       Lesson?   @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
 }
 
 model LmsEvent {
@@ -124,4 +154,87 @@ model SubjectParticipant {
   updatedAt DateTime @updatedAt
 
   @@id([subjectId, userId])
+}
+
+model Institution {
+  id                 String              @id @default(uuid())
+  name               String
+  description        String?             @db.Text
+  subscriptionStatus String              @default("free")
+  thumbnail          String?
+  inviteCode         String?             @unique
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  deletedAt          DateTime?
+  users              User[]
+  subjects           Subject[]
+  members            InstitutionMember[]
+  files              InstitutionFile[]
+}
+
+model InstitutionMember {
+  id            String      @id @default(uuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role          String      @default("lecturer")
+  joinedAt      DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([institutionId, userId])
+}
+
+model InstitutionFile {
+  id            String      @id @default(uuid())
+  name          String
+  url           String
+  mimeType      String
+  sizeBytes     Int
+  category      String      @default("General")
+  uploadedById  String
+  uploadedBy    User        @relation("FileUploader", fields: [uploadedById], references: [id])
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
+}
+
+model Quiz {
+  id               String          @id @default(uuid())
+  lessonId         String          @unique
+  lesson           Lesson          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  allowViewGrade   Boolean         @default(true)      // option 1: user can watch the grade
+  showLeaderboard  Boolean         @default(true)      // option 2: show leaderboard after attempt
+  allowGuest       Boolean         @default(false)     // option 3: accessible to unsigned user (guest)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  questions        QuizQuestion[]
+  attempts         QuizAttempt[]
+}
+
+model QuizQuestion {
+  id            String   @id @default(uuid())
+  quizId        String
+  quiz          Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  questionText  String   @db.Text
+  options       String[]
+  correctOption Int
+  points        Int      @default(1)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model QuizAttempt {
+  id          String   @id @default(uuid())
+  quizId      String
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guestName   String?
+  score       Int
+  totalPoints Int
+  answers     Json
+  submittedAt DateTime @default(now())
 }
