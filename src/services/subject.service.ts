@@ -24,7 +24,6 @@ interface PrismaSubjectOutput {
   id: string;
   name: string;
   room: string | null;
-  color: string | null;
   thumbnail: string | null;
   description: string | null;
   isOpen: boolean;
@@ -201,11 +200,10 @@ export class SubjectService {
   }
 
   async update(id: string, data: IUpdateSubjectInput): Promise<ISubject | null> {
-    const { name, room, color, thumbnail, description, isOpen, category, deletedBy, deletedAt, lecturers, schedules, createdBy, modules, institutionId } = data as any;
+    const { name, room, thumbnail, description, isOpen, category, deletedBy, deletedAt, lecturers, schedules, createdBy, modules, institutionId } = data as any;
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
     if (room !== undefined) updateData.room = room;
-    if (color !== undefined) updateData.color = color;
     if (thumbnail !== undefined) updateData.thumbnail = thumbnail;
     if (description !== undefined) updateData.description = description;
     if (isOpen !== undefined) updateData.isOpen = isOpen;

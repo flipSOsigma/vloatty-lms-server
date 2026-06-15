@@ -66,7 +66,6 @@ async function main() {
         id: sub.id,
         name: sub.name,
         room: sub.room,
-        color: sub.color,
         description: sub.description,
         creatorId: creatorId,
         createdAt: new Date(sub.createdAt),

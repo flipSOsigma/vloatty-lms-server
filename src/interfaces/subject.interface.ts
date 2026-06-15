@@ -13,7 +13,6 @@ export interface ISubject {
   id: string;
   name: string;
   room?: string | null;
-  color?: string | null;
   thumbnail?: string | null;
   description?: string | null;
   isOpen?: boolean;
@@ -37,7 +36,6 @@ export interface ICreateSubjectInput {
   id?: string;
   name: string;
   room?: string;
-  color?: string;
   thumbnail?: string;
   description?: string;
   isOpen?: boolean;
@@ -50,7 +48,6 @@ export interface ICreateSubjectInput {
 export interface IUpdateSubjectInput {
   name?: string;
   room?: string;
-  color?: string;
   thumbnail?: string | null;
   description?: string;
   isOpen?: boolean;
