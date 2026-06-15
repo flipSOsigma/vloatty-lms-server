@@ -20,6 +20,11 @@ model User {
   createdSubjects  Subject[]         @relation("SubjectCreator")
   lecturedSubjects SubjectLecturer[]
   participatedSubjects SubjectParticipant[]
+  institutionId     String?
+  linkedInstitution Institution?      @relation(fields: [institutionId], references: [id], onDelete: SetNull)
+  institutionRole   String?
+  memberships       InstitutionMember[]
+  uploadedFiles     InstitutionFile[] @relation("FileUploader")
 }
 
 model Subject {
@@ -27,6 +32,7 @@ model Subject {
   name         String
   room         String?
   color        String?
+  thumbnail    String?
   description  String?              @db.Text
   isOpen       Boolean              @default(false)
   category     String               @default("Lecture")
@@ -41,6 +47,8 @@ model Subject {
   modules      Module[]
   events       LmsEvent[]
   participants SubjectParticipant[]
+  institutionId    String?
+  institution      Institution?      @relation(fields: [institutionId], references: [id], onDelete: SetNull)
 }
 
 model SubjectLecturer {
@@ -124,4 +132,49 @@ model SubjectParticipant {
   updatedAt DateTime @updatedAt
 
   @@id([subjectId, userId])
+}
+
+model Institution {
+  id                 String              @id @default(uuid())
+  name               String
+  description        String?             @db.Text
+  subscriptionStatus String              @default("free")
+  thumbnail          String?
+  inviteCode         String?             @unique
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  deletedAt          DateTime?
+  users              User[]
+  subjects           Subject[]
+  members            InstitutionMember[]
+  files              InstitutionFile[]
+}
+
+model InstitutionMember {
+  id            String      @id @default(uuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role          String      @default("lecturer")
+  joinedAt      DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([institutionId, userId])
+}
+
+model InstitutionFile {
+  id            String      @id @default(uuid())
+  name          String
+  url           String
+  mimeType      String
+  sizeBytes     Int
+  category      String      @default("General")
+  uploadedById  String
+  uploadedBy    User        @relation("FileUploader", fields: [uploadedById], references: [id])
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
 }

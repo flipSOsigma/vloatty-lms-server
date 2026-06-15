@@ -25,6 +25,7 @@ interface PrismaSubjectOutput {
   name: string;
   room: string | null;
   color: string | null;
+  thumbnail: string | null;
   description: string | null;
   isOpen: boolean;
   category: string;
@@ -38,6 +39,7 @@ interface PrismaSubjectOutput {
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
+  institutionId: string | null;
   lecturers?: SubjectLecturerWithUser[];
   schedules?: ISubjectSchedule[];
   modules?: IModule[];
@@ -199,17 +201,19 @@ export class SubjectService {
   }
 
   async update(id: string, data: IUpdateSubjectInput): Promise<ISubject | null> {
-    const { name, room, color, description, isOpen, category, deletedBy, deletedAt, lecturers, schedules, createdBy, modules } = data as any;
+    const { name, room, color, thumbnail, description, isOpen, category, deletedBy, deletedAt, lecturers, schedules, createdBy, modules, institutionId } = data as any;
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
     if (room !== undefined) updateData.room = room;
     if (color !== undefined) updateData.color = color;
+    if (thumbnail !== undefined) updateData.thumbnail = thumbnail;
     if (description !== undefined) updateData.description = description;
     if (isOpen !== undefined) updateData.isOpen = isOpen;
     if (category !== undefined) updateData.category = category;
     if (deletedBy !== undefined) updateData.deletedBy = deletedBy;
     if (deletedAt !== undefined) updateData.deletedAt = deletedAt;
     if (createdBy !== undefined) updateData.creatorId = createdBy;
+    if (institutionId !== undefined) updateData.institutionId = institutionId;
 
     const resolvedLecturerIds: string[] = [];
     if (lecturers) {

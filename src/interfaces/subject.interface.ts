@@ -14,6 +14,7 @@ export interface ISubject {
   name: string;
   room?: string | null;
   color?: string | null;
+  thumbnail?: string | null;
   description?: string | null;
   isOpen?: boolean;
   category?: string;
@@ -29,12 +30,15 @@ export interface ISubject {
   schedules?: ISubjectSchedule[];
   modules?: IModule[];
   participants?: ISubjectParticipant[];
+  institutionId?: string | null;
 }
 
 export interface ICreateSubjectInput {
+  id?: string;
   name: string;
   room?: string;
   color?: string;
+  thumbnail?: string;
   description?: string;
   isOpen?: boolean;
   category?: string;
@@ -47,6 +51,7 @@ export interface IUpdateSubjectInput {
   name?: string;
   room?: string;
   color?: string;
+  thumbnail?: string | null;
   description?: string;
   isOpen?: boolean;
   category?: string;
@@ -54,5 +59,6 @@ export interface IUpdateSubjectInput {
   lecturers?: { userId?: string; name?: string; email?: string }[];
   schedules?: ISubjectSchedule[];
   modules?: any[];
+  institutionId?: string | null;
 }
 
