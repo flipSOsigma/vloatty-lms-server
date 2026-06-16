@@ -36,7 +36,52 @@ export class SubjectController {
 
   async update(req: Request, res: Response) {
     try {
-      const subject = await subjectService.update(req.params.id, req.body);
+      const subjectId = req.params.id;
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const existingSubject = await prisma.subject.findFirst({
+        where: { id: subjectId, deletedAt: null },
+        include: {
+          lecturers: {
+            include: {
+              user: true
+            }
+          }
+        }
+      });
+
+      if (!existingSubject) {
+        return res.status(404).json({ error: "Subject not found" });
+      }
+
+      const isOwner = existingSubject.creatorId === userId;
+      const isLecturer = existingSubject.lecturers.some((l) => l.userId === userId);
+
+      if (!isOwner && !isLecturer) {
+        return res.status(403).json({ error: "Only the subject creator or lecturer can update this subject." });
+      }
+
+      if (isLecturer && !isOwner) {
+        // Strip metadata fields so they cannot be updated by lecturers
+        delete req.body.name;
+        delete req.body.room;
+        delete req.body.thumbnail;
+        delete req.body.description;
+        delete req.body.isOpen;
+        delete req.body.category;
+        delete req.body.lecturers;
+        delete req.body.schedules;
+        delete req.body.institutionId;
+        delete req.body.createdBy;
+        delete req.body.creatorId;
+        delete req.body.deletedAt;
+        delete req.body.deletedBy;
+      }
+
+      const subject = await subjectService.update(subjectId, req.body);
       res.json(subject);
     } catch (e: unknown) {
       const err = e as Error;
@@ -46,7 +91,25 @@ export class SubjectController {
 
   async delete(req: Request, res: Response) {
     try {
-      await subjectService.delete(req.params.id);
+      const subjectId = req.params.id;
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const subject = await prisma.subject.findFirst({
+        where: { id: subjectId, deletedAt: null }
+      });
+
+      if (!subject) {
+        return res.status(404).json({ error: "Subject not found" });
+      }
+
+      if (subject.creatorId !== userId) {
+        return res.status(403).json({ error: "Only the subject creator can delete this subject." });
+      }
+
+      await subjectService.delete(subjectId);
       res.json({ message: "Subject deleted successfully" });
     } catch (e: unknown) {
       const err = e as Error;
