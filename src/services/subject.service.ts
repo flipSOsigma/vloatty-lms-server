@@ -246,6 +246,18 @@ export class SubjectService {
       }
 
       if (modules) {
+        const dbModules = await tx.module.findMany({
+          where: { subjectId: id, deletedAt: null }
+        });
+        const incomingModuleIds = modules.map((m: any) => m.id).filter(Boolean);
+        const modulesToSoftDelete = dbModules.filter((m: any) => !incomingModuleIds.includes(m.id));
+        if (modulesToSoftDelete.length > 0) {
+          await tx.module.updateMany({
+            where: { id: { in: modulesToSoftDelete.map((m: any) => m.id) } },
+            data: { deletedAt: new Date() }
+          });
+        }
+
         for (const m of modules) {
           const moduleData = {
             title: m.title,
@@ -264,6 +276,18 @@ export class SubjectService {
           });
 
           if (m.lessons) {
+            const dbLessons = await tx.lesson.findMany({
+              where: { moduleId: m.id, deletedAt: null }
+            });
+            const incomingLessonIds = m.lessons.map((l: any) => l.id).filter(Boolean);
+            const lessonsToSoftDelete = dbLessons.filter((l: any) => !incomingLessonIds.includes(l.id));
+            if (lessonsToSoftDelete.length > 0) {
+              await tx.lesson.updateMany({
+                where: { id: { in: lessonsToSoftDelete.map((l: any) => l.id) } },
+                data: { deletedAt: new Date() }
+              });
+            }
+
             for (const l of m.lessons) {
               const lessonData = {
                 title: l.title,

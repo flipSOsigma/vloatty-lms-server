@@ -12,10 +12,18 @@ export class QuizController {
         return res.status(404).json({ error: "Quiz not found" });
       }
 
-      // Check if user is lecturer/creator to decide whether to include correct answers
+      // Check for past attempts by the logged in user
+      let userAttempt = null;
       let isLecturerOrCreator = false;
       const authReq = req as AuthenticatedRequest;
       if (authReq.user?.id) {
+        userAttempt = await prisma.quizAttempt.findFirst({
+          where: {
+            quizId: quiz.id,
+            userId: authReq.user.id
+          }
+        });
+
         const lesson = await prisma.lesson.findUnique({
           where: { id: lessonId },
           include: {
@@ -45,10 +53,10 @@ export class QuizController {
           const { correctOption, ...safeQ } = q;
           return safeQ;
         });
-        return res.json({ ...quiz, questions: safeQuestions });
+        return res.json({ ...quiz, questions: safeQuestions, userAttempt });
       }
 
-      return res.json(quiz);
+      return res.json({ ...quiz, userAttempt });
     } catch (e: unknown) {
       const err = e as Error;
       res.status(500).json({ error: err.message });
@@ -109,6 +117,19 @@ export class QuizController {
       const quiz = await QuizService.getQuizByLessonId(lessonId);
       if (!quiz) {
         return res.status(404).json({ error: "Quiz not found" });
+      }
+
+      // Prevent multiple attempts for logged in users
+      if (userId) {
+        const existingAttempt = await prisma.quizAttempt.findFirst({
+          where: {
+            quizId: quiz.id,
+            userId: userId
+          }
+        });
+        if (existingAttempt) {
+          return res.status(400).json({ error: "You have already attempted this quiz." });
+        }
       }
 
       // Check availability window
