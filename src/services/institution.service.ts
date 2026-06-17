@@ -190,6 +190,43 @@ export class InstitutionService {
       where: { institutionId_userId: { institutionId, userId } },
     });
   }
+
+  async getStorageUsed(institutionId: string) {
+    const [instFiles, subjFiles, submissions] = await Promise.all([
+      prisma.institutionFile.findMany({
+        where: { institutionId, deletedAt: null },
+        select: { sizeBytes: true },
+      }),
+      prisma.subjectFile.findMany({
+        where: {
+          subject: { institutionId, deletedAt: null },
+          deletedAt: null,
+        },
+        select: { sizeBytes: true },
+      }),
+      prisma.assignmentSubmission.findMany({
+        where: {
+          lesson: {
+            deletedAt: null,
+            module: {
+              deletedAt: null,
+              subject: { institutionId, deletedAt: null },
+            },
+          },
+        },
+        select: { fileSize: true },
+      }),
+    ]);
+
+    const instTotal = instFiles.reduce((sum, f) => sum + f.sizeBytes, 0);
+    const subjTotal = subjFiles.reduce((sum, f) => sum + f.sizeBytes, 0);
+    const submissionsTotal = submissions.reduce((sum, s) => sum + s.fileSize, 0);
+
+    return {
+      usedBytes: instTotal + subjTotal + submissionsTotal,
+      maxBytes: 200 * 1024 * 1024, // 200 MB
+    };
+  }
 }
 
 export const institutionService = new InstitutionService();

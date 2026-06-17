@@ -13,41 +13,25 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
-interface DecodedToken {
-  id: string;
-  name: string;
-  email: string;
-  premiumStatus: string;
-  institution: string;
+function decodeToken(token: string) {
+  try {
+    return jwt.verify(token, JWT_SECRET) as AuthenticatedRequest["user"];
+  } catch {
+    if (token.endsWith("mockSignatureHere123456789012345678901234567890")) {
+      return jwt.decode(token) as AuthenticatedRequest["user"];
+    }
+    throw new Error("Invalid token");
+  }
 }
 
 export function authMiddleware(req: Request, res: Response, next: NextFunction) {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return res.status(401).json({ error: "Access denied. No token provided." });
     }
-
     const token = authHeader.split(" ")[1];
-    let decoded: DecodedToken;
-    try {
-      decoded = jwt.verify(token, JWT_SECRET) as unknown as DecodedToken;
-    } catch (err) {
-      if (token.endsWith("mockSignatureHere123456789012345678901234567890")) {
-        decoded = jwt.decode(token) as unknown as DecodedToken;
-      } else {
-        throw err;
-      }
-    }
-
-    (req as AuthenticatedRequest).user = {
-      id: decoded.id,
-      name: decoded.name,
-      email: decoded.email,
-      premiumStatus: decoded.premiumStatus,
-      institution: decoded.institution
-    };
-
+    (req as AuthenticatedRequest).user = decodeToken(token);
     next();
   } catch {
     res.status(401).json({ error: "Invalid or expired token." });
@@ -57,30 +41,12 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
 export function optionalAuthMiddleware(req: Request, res: Response, next: NextFunction) {
   try {
     const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith("Bearer ")) {
+    if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.split(" ")[1];
-      let decoded: DecodedToken;
-      try {
-        decoded = jwt.verify(token, JWT_SECRET) as unknown as DecodedToken;
-      } catch (err) {
-        if (token.endsWith("mockSignatureHere123456789012345678901234567890")) {
-          decoded = jwt.decode(token) as unknown as DecodedToken;
-        } else {
-          throw err;
-        }
-      }
-
-      (req as AuthenticatedRequest).user = {
-        id: decoded.id,
-        name: decoded.name,
-        email: decoded.email,
-        premiumStatus: decoded.premiumStatus,
-        institution: decoded.institution
-      };
+      (req as AuthenticatedRequest).user = decodeToken(token);
     }
   } catch {
-    // Continue without setting req.user if token is invalid or expired
+    // Continue without user if token is invalid
   }
   next();
 }
-
