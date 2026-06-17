@@ -1,142 +1,94 @@
 import { Request, Response } from "express";
 import { QuizService } from "../services/quiz.service";
-import prisma from "../config/prisma";
 import { AuthenticatedRequest } from "../middlewares/auth.middleware";
+import prisma from "../config/prisma";
+
+async function getSubjectForLesson(lessonId: string) {
+  const lesson = await prisma.lesson.findUnique({
+    where: { id: lessonId },
+    include: {
+      module: {
+        include: { subject: { include: { lecturers: true } } },
+      },
+    },
+  });
+  return lesson ? lesson.module.subject : null;
+}
+
+function isInstructor(subject: { creatorId: string; lecturers: { userId: string }[] }, userId: string) {
+  return subject.creatorId === userId || subject.lecturers.some((l) => l.userId === userId);
+}
 
 export class QuizController {
   static async getQuiz(req: Request, res: Response) {
     try {
       const { lessonId } = req.params;
       const quiz = await QuizService.getQuizByLessonId(lessonId);
-      if (!quiz) {
-        return res.status(404).json({ error: "Quiz not found" });
-      }
+      if (!quiz) return res.status(404).json({ error: "Quiz not found" });
 
-      // Check for past attempts by the logged in user
-      let userAttempt = null;
-      let isLecturerOrCreator = false;
       const authReq = req as AuthenticatedRequest;
+      let userAttempt = null;
+      let canSeeAnswers = false;
+
       if (authReq.user?.id) {
         userAttempt = await prisma.quizAttempt.findFirst({
-          where: {
-            quizId: quiz.id,
-            userId: authReq.user.id
-          }
+          where: { quizId: quiz.id, userId: authReq.user.id },
         });
-
-        const lesson = await prisma.lesson.findUnique({
-          where: { id: lessonId },
-          include: {
-            module: {
-              include: {
-                subject: {
-                  include: {
-                    lecturers: true
-                  }
-                }
-              }
-            }
-          }
-        });
-
-        if (lesson) {
-          const subject = lesson.module.subject;
-          const isCreator = subject.creatorId === authReq.user?.id;
-          const isLecturer = subject.lecturers.some((l) => l.userId === authReq.user?.id);
-          isLecturerOrCreator = isCreator || isLecturer;
-        }
+        const subject = await getSubjectForLesson(lessonId);
+        if (subject) canSeeAnswers = isInstructor(subject, authReq.user.id);
       }
 
-      if (!isLecturerOrCreator) {
-        // Hide correct option index for students/guests
-        const safeQuestions = quiz.questions.map((q) => {
-          const { correctOption, ...safeQ } = q;
-          return safeQ;
-        });
+      if (!canSeeAnswers) {
+        const safeQuestions = quiz.questions.map(({ correctOption: _c, ...q }) => q);
         return res.json({ ...quiz, questions: safeQuestions, userAttempt });
       }
 
       return res.json({ ...quiz, userAttempt });
-    } catch (e: unknown) {
-      const err = e as Error;
-      res.status(500).json({ error: err.message });
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
     }
   }
 
   static async saveQuiz(req: Request, res: Response) {
     try {
-      const { lessonId } = req.params;
       const authReq = req as AuthenticatedRequest;
       const userId = authReq.user?.id;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-      if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+      const { lessonId } = req.params;
+      const lesson = await prisma.lesson.findUnique({ where: { id: lessonId } });
+      if (!lesson) return res.status(404).json({ error: "Lesson not found" });
 
-      // Validate edit permission
-      const lesson = await prisma.lesson.findUnique({
-        where: { id: lessonId },
-        include: {
-          module: {
-            include: {
-              subject: {
-                include: {
-                  lecturers: true
-                }
-              }
-            }
-          }
-        }
-      });
-
-      if (!lesson) {
-        return res.status(404).json({ error: "Lesson not found" });
-      }
-
-      const subject = lesson.module.subject;
-      const isCreator = subject.creatorId === userId;
-      const isLecturer = subject.lecturers.some((l) => l.userId === userId);
-      if (!isCreator && !isLecturer) {
+      const subject = await getSubjectForLesson(lessonId);
+      if (!subject || !isInstructor(subject, userId)) {
         return res.status(403).json({ error: "Forbidden: Only lecturers can edit quizzes" });
       }
 
-      const quiz = await QuizService.upsertQuiz(lessonId, req.body);
-      return res.json(quiz);
-    } catch (e: unknown) {
-      const err = e as Error;
-      res.status(500).json({ error: err.message });
+      res.json(await QuizService.upsertQuiz(lessonId, req.body));
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
     }
   }
 
   static async submitAttempt(req: Request, res: Response) {
     try {
-      const { lessonId } = req.params;
       const authReq = req as AuthenticatedRequest;
-      const userId = authReq.user?.id; // Optional for guests
+      const userId = authReq.user?.id;
+      const { lessonId } = req.params;
 
       const quiz = await QuizService.getQuizByLessonId(lessonId);
-      if (!quiz) {
-        return res.status(404).json({ error: "Quiz not found" });
-      }
+      if (!quiz) return res.status(404).json({ error: "Quiz not found" });
 
-      // Prevent multiple attempts for logged in users
       if (userId) {
         const existingAttempt = await prisma.quizAttempt.findFirst({
-          where: {
-            quizId: quiz.id,
-            userId: userId
-          }
+          where: { quizId: quiz.id, userId },
         });
         if (existingAttempt) {
           return res.status(400).json({ error: "You have already attempted this quiz." });
         }
       }
 
-      // Check availability window
-      const lesson = await prisma.lesson.findUnique({
-        where: { id: lessonId }
-      });
-
+      const lesson = await prisma.lesson.findUnique({ where: { id: lessonId } });
       if (lesson) {
         const now = new Date();
         if (now < new Date(lesson.openDate)) {
@@ -147,58 +99,50 @@ export class QuizController {
         }
       }
 
-      // Guest check
-      const guestName = req.body.guestName;
+      const guestName = req.body.guestName as string | undefined;
       if (!userId) {
         if (!quiz.allowGuest) {
           return res.status(401).json({ error: "Guest attempts are not allowed for this quiz. Please log in." });
         }
-        if (!guestName || !guestName.trim()) {
+        if (!guestName?.trim()) {
           return res.status(400).json({ error: "Guest name is required." });
         }
       }
 
-      // Calculate score on the server
+      const submissionAnswers = req.body.answers as Record<string, number> || {};
       let score = 0;
       let totalPoints = 0;
-      const submissionAnswers = req.body.answers || {};
 
       for (const question of quiz.questions) {
-        const questionPoints = question.points ?? 1;
-        totalPoints += questionPoints;
-
-        const submittedAnswer = submissionAnswers[question.id];
-        if (submittedAnswer !== undefined && Number(submittedAnswer) === question.correctOption) {
-          score += questionPoints;
+        const pts = question.points ?? 1;
+        totalPoints += pts;
+        if (Number(submissionAnswers[question.id]) === question.correctOption) {
+          score += pts;
         }
       }
 
       const attempt = await QuizService.createAttempt(quiz.id, {
         userId,
-        guestName: userId ? undefined : guestName.trim(),
+        guestName: userId ? undefined : guestName!.trim(),
         score,
         totalPoints,
-        answers: submissionAnswers
+        answers: submissionAnswers,
       });
 
-      const responseData: any = {
+      const responseData: Record<string, unknown> = {
         attemptId: attempt.id,
         score,
         totalPoints,
-        submittedAt: attempt.submittedAt
+        submittedAt: attempt.submittedAt,
       };
 
       if (quiz.allowViewGrade) {
-        responseData.correctAnswers = quiz.questions.reduce((acc: any, q) => {
-          acc[q.id] = q.correctOption;
-          return acc;
-        }, {});
+        responseData.correctAnswers = Object.fromEntries(quiz.questions.map((q) => [q.id, q.correctOption]));
       }
 
       return res.status(201).json(responseData);
-    } catch (e: unknown) {
-      const err = e as Error;
-      res.status(500).json({ error: err.message });
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
     }
   }
 
@@ -206,46 +150,23 @@ export class QuizController {
     try {
       const { lessonId } = req.params;
       const quiz = await QuizService.getQuizByLessonId(lessonId);
-      if (!quiz) {
-        return res.status(404).json({ error: "Quiz not found" });
-      }
+      if (!quiz) return res.status(404).json({ error: "Quiz not found" });
 
-      // Check edit permissions
-      let isLecturerOrCreator = false;
       const authReq = req as AuthenticatedRequest;
-      if (authReq.user?.id) {
-        const lesson = await prisma.lesson.findUnique({
-          where: { id: lessonId },
-          include: {
-            module: {
-              include: {
-                subject: {
-                  include: {
-                    lecturers: true
-                  }
-                }
-              }
-            }
-          }
-        });
+      let canView = quiz.showLeaderboard;
 
-        if (lesson) {
-          const subject = lesson.module.subject;
-          const isCreator = subject.creatorId === authReq.user?.id;
-          const isLecturer = subject.lecturers.some((l) => l.userId === authReq.user?.id);
-          isLecturerOrCreator = isCreator || isLecturer;
-        }
+      if (authReq.user?.id) {
+        const subject = await getSubjectForLesson(lessonId);
+        if (subject && isInstructor(subject, authReq.user.id)) canView = true;
       }
 
-      if (!quiz.showLeaderboard && !isLecturerOrCreator) {
+      if (!canView) {
         return res.status(403).json({ error: "Leaderboard is disabled for this quiz." });
       }
 
-      const attempts = await QuizService.getAttempts(quiz.id);
-      return res.json(attempts);
-    } catch (e: unknown) {
-      const err = e as Error;
-      res.status(500).json({ error: err.message });
+      return res.json(await QuizService.getAttempts(quiz.id));
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
     }
   }
 }

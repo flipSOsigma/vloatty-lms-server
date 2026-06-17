@@ -5,11 +5,9 @@ import { AuthenticatedRequest } from "../middlewares/auth.middleware";
 export class InstitutionController {
   async getAll(req: Request, res: Response) {
     try {
-      const institutions = await institutionService.getAll();
-      res.json(institutions);
-    } catch (e: unknown) {
-      const err = e as Error;
-      res.status(500).json({ error: err.message });
+      res.json(await institutionService.getAll());
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
     }
   }
 
@@ -18,30 +16,25 @@ export class InstitutionController {
       const institution = await institutionService.getById(req.params.id);
       if (!institution) return res.status(404).json({ error: "Institution not found" });
       res.json(institution);
-    } catch (e: unknown) {
-      const err = e as Error;
-      res.status(500).json({ error: err.message });
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
     }
   }
 
   async create(req: Request, res: Response) {
     try {
       const creatorId = (req as AuthenticatedRequest).user?.id;
-      const institution = await institutionService.create(req.body, creatorId);
-      res.status(201).json(institution);
-    } catch (e: unknown) {
-      const err = e as Error;
-      res.status(500).json({ error: err.message });
+      res.status(201).json(await institutionService.create(req.body, creatorId));
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
     }
   }
 
   async update(req: Request, res: Response) {
     try {
-      const institution = await institutionService.update(req.params.id, req.body);
-      res.json(institution);
-    } catch (e: unknown) {
-      const err = e as Error;
-      res.status(500).json({ error: err.message });
+      res.json(await institutionService.update(req.params.id, req.body));
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
     }
   }
 
@@ -49,9 +42,8 @@ export class InstitutionController {
     try {
       await institutionService.delete(req.params.id);
       res.json({ message: "Institution deleted successfully" });
-    } catch (e: unknown) {
-      const err = e as Error;
-      res.status(500).json({ error: err.message });
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
     }
   }
 
@@ -59,9 +51,8 @@ export class InstitutionController {
     try {
       const code = await institutionService.getInviteCode(req.params.id);
       res.json({ inviteCode: code });
-    } catch (e: unknown) {
-      const err = e as Error;
-      res.status(500).json({ error: err.message });
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
     }
   }
 
@@ -73,36 +64,28 @@ export class InstitutionController {
       const code = req.body.inviteCode || req.query.code;
       if (!code) return res.status(400).json({ error: "Invite code is required" });
 
-      const result = await institutionService.joinInstitution(code as string, userId);
-      res.json(result);
-    } catch (e: unknown) {
-      const err = e as Error;
-      res.status(500).json({ error: err.message });
+      res.json(await institutionService.joinInstitution(String(code), userId));
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
     }
   }
 
   async updateUserRole(req: Request, res: Response) {
     try {
       const { id, userId } = req.params;
-      const { role } = req.body as { role: string };
+      const role = req.body.role as string;
       if (!role) return res.status(400).json({ error: "Role is required" });
-
-      const user = await institutionService.updateUserRole(id, userId, role);
-      res.json(user);
-    } catch (e: unknown) {
-      const err = e as Error;
-      res.status(500).json({ error: err.message });
+      res.json(await institutionService.updateUserRole(id, userId, role));
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
     }
   }
 
   async removeUser(req: Request, res: Response) {
     try {
-      const { id, userId } = req.params;
-      const user = await institutionService.removeUser(id, userId);
-      res.json(user);
-    } catch (e: unknown) {
-      const err = e as Error;
-      res.status(500).json({ error: err.message });
+      res.json(await institutionService.removeUser(req.params.id, req.params.userId));
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
     }
   }
 
@@ -111,44 +94,43 @@ export class InstitutionController {
       const inst = await institutionService.getByInviteCode(req.params.code);
       if (!inst) return res.status(404).json({ error: "Institution not found" });
       res.json(inst);
-    } catch (e: unknown) {
-      const err = e as Error;
-      res.status(500).json({ error: err.message });
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
     }
   }
 
   async getMembers(req: Request, res: Response) {
     try {
-      const members = await institutionService.getMembers(req.params.id);
-      res.json(members);
-    } catch (e: unknown) {
-      const err = e as Error;
-      res.status(500).json({ error: err.message });
+      res.json(await institutionService.getMembers(req.params.id));
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
     }
   }
 
   async updateMemberRole(req: Request, res: Response) {
     try {
       const { id, userId } = req.params;
-      const { role } = req.body as { role: string };
+      const role = req.body.role as string;
       if (!role) return res.status(400).json({ error: "Role is required" });
-
-      const member = await institutionService.updateMemberRole(id, userId, role);
-      res.json(member);
-    } catch (e: unknown) {
-      const err = e as Error;
-      res.status(500).json({ error: err.message });
+      res.json(await institutionService.updateMemberRole(id, userId, role));
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
     }
   }
 
   async removeMember(req: Request, res: Response) {
     try {
-      const { id, userId } = req.params;
-      const member = await institutionService.removeMember(id, userId);
-      res.json(member);
-    } catch (e: unknown) {
-      const err = e as Error;
-      res.status(500).json({ error: err.message });
+      res.json(await institutionService.removeMember(req.params.id, req.params.userId));
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
+    }
+  }
+
+  async getStorage(req: Request, res: Response) {
+    try {
+      res.json(await institutionService.getStorageUsed(req.params.id));
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
     }
   }
 }

@@ -1,25 +1,29 @@
 import prisma from "../config/prisma";
-import { IUser, IUpdateUserInput } from "../interfaces/user.interface";
 
 export class UserService {
-  async getProfile(id: string): Promise<IUser | null> {
-    const user = await prisma.user.findUnique({
-      where: { id }
-    });
-    return user as unknown as IUser | null;
+  getProfile(id: string) {
+    return prisma.user.findUnique({ where: { id } });
   }
 
-  async updateProfile(id: string, data: IUpdateUserInput): Promise<IUser> {
-    const user = await prisma.user.update({
-      where: { id },
-      data
-    });
-    return user as unknown as IUser;
+  updateProfile(id: string, data: { name?: string; institution?: string; avatar?: string }) {
+    return prisma.user.update({ where: { id }, data });
   }
 
-  async getAllUsers(): Promise<IUser[]> {
-    const users = await prisma.user.findMany();
-    return users as unknown as IUser[];
+  getAllUsers() {
+    return prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        avatar: true,
+        institution: true,
+        premiumStatus: true,
+        institutionId: true,
+        institutionRole: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
   }
 }
 
