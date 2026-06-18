@@ -146,8 +146,31 @@ export class SubjectService {
     }[];
   }) {
     const { lecturers, schedules, createdBy, modules, ...fields } = data;
-    const updateData: Record<string, unknown> = { ...fields };
-    if (createdBy !== undefined) updateData.creatorId = createdBy;
+    const updateData: Record<string, any> = {};
+
+    if (fields.name !== undefined) updateData.name = fields.name;
+    if (fields.room !== undefined) updateData.room = fields.room;
+    if (fields.thumbnail !== undefined) updateData.thumbnail = fields.thumbnail;
+    if (fields.description !== undefined) updateData.description = fields.description;
+    if (fields.isOpen !== undefined) updateData.isOpen = fields.isOpen;
+    if (fields.category !== undefined) updateData.category = fields.category;
+    if (fields.deletedBy !== undefined) updateData.deletedBy = fields.deletedBy;
+    if (fields.deletedAt !== undefined) {
+      updateData.deletedAt = fields.deletedAt ? new Date(fields.deletedAt as any) : null;
+    }
+
+    if (createdBy !== undefined) {
+      updateData.creator = { connect: { id: createdBy } };
+    }
+
+    const typedFields = fields as Record<string, any>;
+    if (typedFields.institutionId !== undefined) {
+      if (typedFields.institutionId === null || typedFields.institutionId === "") {
+        updateData.institution = { disconnect: true };
+      } else {
+        updateData.institution = { connect: { id: typedFields.institutionId } };
+      }
+    }
 
     const lecturerIds = lecturers ? await resolveLecturerIds(lecturers) : [];
 

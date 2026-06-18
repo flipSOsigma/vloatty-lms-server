@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { utapi, deleteUploadthingFile } from "../config/uploadthing";
 import { institutionFileService } from "../services/institutionFile.service";
+import { institutionService } from "../services/institution.service";
 import { AuthenticatedRequest } from "../middlewares/auth.middleware";
 
 export class InstitutionFileController {
@@ -19,6 +20,14 @@ export class InstitutionFileController {
       const institutionId = req.params.id;
       const uploadedById = (req as AuthenticatedRequest).user!.id;
       const file = req.file;
+
+      // Check storage limit before invoking UploadThing
+      const storage = await institutionService.getStorageUsed(institutionId);
+      if (storage.usedBytes + file.size > storage.maxBytes) {
+        return res.status(400).json({
+          error: `Storage limit exceeded. This file of ${(file.size / (1024 * 1024)).toFixed(2)} MB exceeds the institution storage quota of 200 MB.`
+        });
+      }
 
       const uploadable = new File([file.buffer], file.originalname, { type: file.mimetype });
       const [uploaded] = await utapi.uploadFiles([uploadable]);
