@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { utapi, deleteUploadthingFile } from "../config/uploadthing";
 import { subjectFileService } from "../services/subjectFile.service";
 import { subjectService } from "../services/subject.service";
+import { userService } from "../services/user.service";
 import { AuthenticatedRequest } from "../middlewares/auth.middleware";
 
 async function getSubjectAccess(subjectId: string, userId: string) {
@@ -55,6 +56,15 @@ export class SubjectFileController {
       if (!req.file) return res.status(400).json({ error: "No file provided" });
 
       const file = req.file;
+
+      // Check storage limit before invoking UploadThing
+      const stats = await userService.getDashboardStats(userId);
+      if (stats.storage.usedBytes + file.size > stats.storage.maxBytes) {
+        return res.status(400).json({
+          error: `Storage limit exceeded. Your file of ${(file.size / (1024 * 1024)).toFixed(2)} MB exceeds your remaining storage quota.`
+        });
+      }
+
       const uploadable = new File([file.buffer], file.originalname, { type: file.mimetype });
       const [uploaded] = await utapi.uploadFiles([uploadable]);
 
