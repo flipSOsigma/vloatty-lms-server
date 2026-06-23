@@ -10,6 +10,7 @@ import subjectFileRoutes from "./subjectFile.routes";
 import quizRoutes from "./quiz.routes";
 import assignmentRoutes from "./assignment.routes";
 import presencionRoutes from "./presencion.routes";
+import aiRoutes from "./ai.routes";
 
 const router = Router();
 
@@ -21,6 +22,7 @@ router.use("/users", userRoutes);
 router.use("/institutions", institutionRoutes);
 router.use("/institutions", institutionFileRoutes);
 router.use("/upload", uploadRoutes);
+router.use("/ai", aiRoutes);
 router.use("/", quizRoutes);
 router.use("/", assignmentRoutes);
 router.use("/", presencionRoutes);

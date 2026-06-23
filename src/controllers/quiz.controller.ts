@@ -25,11 +25,11 @@ export class QuizController {
       const { lessonId } = req.params;
       const quiz = await QuizService.getQuizByLessonId(lessonId);
       if (!quiz) return res.status(404).json({ error: "Quiz not found" });
-
+ 
       const authReq = req as AuthenticatedRequest;
-      let userAttempt = null;
+      let userAttempt: any = null;
       let canSeeAnswers = false;
-
+ 
       if (authReq.user?.id) {
         userAttempt = await prisma.quizAttempt.findFirst({
           where: { quizId: quiz.id, userId: authReq.user.id },
@@ -37,12 +37,21 @@ export class QuizController {
         const subject = await getSubjectForLesson(lessonId);
         if (subject) canSeeAnswers = isInstructor(subject, authReq.user.id);
       }
-
+ 
       if (!canSeeAnswers) {
         const safeQuestions = quiz.questions.map(({ correctOption: _c, ...q }) => q);
+        if (userAttempt && quiz.allowViewGrade) {
+          const correctAnswers = Object.fromEntries(
+            quiz.questions.map((q) => [q.id, q.correctOption])
+          );
+          userAttempt = {
+            ...userAttempt,
+            correctAnswers,
+          };
+        }
         return res.json({ ...quiz, questions: safeQuestions, userAttempt });
       }
-
+ 
       return res.json({ ...quiz, userAttempt });
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
