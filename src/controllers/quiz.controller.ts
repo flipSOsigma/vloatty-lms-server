@@ -130,12 +130,19 @@ export class QuizController {
         }
       }
 
+      const answerLogs = req.body.answerLogs as { questionId: string; optionIndex: number; createdAt?: string }[] | undefined;
+      const userAgent = req.headers["user-agent"] as string | undefined;
+      const ipAddress = (req.headers["x-forwarded-for"] as string || req.socket.remoteAddress || "").split(",")[0].trim();
+
       const attempt = await QuizService.createAttempt(quiz.id, {
         userId,
         guestName: userId ? undefined : guestName!.trim(),
         score,
         totalPoints,
         answers: submissionAnswers,
+        answerLogs,
+        userAgent,
+        ipAddress,
       });
 
       const responseData: Record<string, unknown> = {
