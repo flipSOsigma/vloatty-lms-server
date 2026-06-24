@@ -242,7 +242,19 @@ model QuizAttempt {
   score       Int
   totalPoints Int
   answers     Json
+  userAgent   String?
+  ipAddress   String?
   submittedAt DateTime @default(now())
+  answerLogs  QuizAnswerLog[]
+}
+
+model QuizAnswerLog {
+  id          String      @id @default(uuid())
+  attemptId   String
+  attempt     QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId  String
+  optionIndex Int
+  createdAt   DateTime    @default(now())
 }
 
 model AssignmentSubmission {

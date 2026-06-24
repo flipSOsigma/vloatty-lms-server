@@ -63,6 +63,9 @@ export class QuizService {
       score: number;
       totalPoints: number;
       answers: Record<string, number>;
+      userAgent?: string;
+      ipAddress?: string;
+      answerLogs?: { questionId: string; optionIndex: number; createdAt?: string }[];
     }
   ) {
     return prisma.quizAttempt.create({
@@ -73,8 +76,20 @@ export class QuizService {
         score: data.score,
         totalPoints: data.totalPoints,
         answers: data.answers,
+        userAgent: data.userAgent ?? null,
+        ipAddress: data.ipAddress ?? null,
+        answerLogs: data.answerLogs && data.answerLogs.length > 0 ? {
+          create: data.answerLogs.map(log => ({
+            questionId: log.questionId,
+            optionIndex: log.optionIndex,
+            createdAt: log.createdAt ? new Date(log.createdAt) : new Date()
+          }))
+        } : undefined
       },
-      include: { user: { select: { id: true, name: true, avatar: true } } },
+      include: { 
+        user: { select: { id: true, name: true, avatar: true } },
+        answerLogs: true
+      },
     });
   }
 
@@ -82,7 +97,10 @@ export class QuizService {
     return prisma.quizAttempt.findMany({
       where: { quizId },
       orderBy: { score: "desc" },
-      include: { user: { select: { id: true, name: true, avatar: true } } },
+      include: { 
+        user: { select: { id: true, name: true, avatar: true } },
+        answerLogs: true
+      },
     });
   }
 }
