@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { institutionService } from "../services/institution.service";
 import { AuthenticatedRequest } from "../middlewares/auth.middleware";
+import prisma from "../config/prisma";
+import { MailService } from "../services/mail.service";
 
 export class InstitutionController {
   async getAll(req: Request, res: Response) {
@@ -24,6 +26,52 @@ export class InstitutionController {
   async create(req: Request, res: Response) {
     try {
       const creatorId = (req as AuthenticatedRequest).user?.id;
+      if (!creatorId) return res.status(401).json({ error: "Unauthorized" });
+
+      const user = await prisma.user.findUnique({
+        where: { id: creatorId },
+        select: { email: true, name: true, premiumStatus: true }
+      });
+      const status = user?.premiumStatus || "free";
+
+      let maxInstitutions = 0;
+      if (status === "pro" || status === "premium") maxInstitutions = 1;
+      else if (status === "max" || status === "professional") maxInstitutions = 5;
+
+      if (maxInstitutions === 0) {
+        if (user) {
+          MailService.sendLimitReachedNotification(
+            user.email,
+            user.name,
+            "Institution Creation",
+            0,
+            status
+          ).catch(console.error);
+        }
+        return res.status(403).json({
+          error: "Institution creation is not allowed on the FREE tier. Please upgrade to Pro or Max."
+        });
+      }
+
+      const ownedInstitutionsCount = await prisma.institutionMember.count({
+        where: { userId: creatorId, role: "owner" }
+      });
+
+      if (ownedInstitutionsCount >= maxInstitutions) {
+        if (user) {
+          MailService.sendLimitReachedNotification(
+            user.email,
+            user.name,
+            "Institution Creation",
+            maxInstitutions,
+            status
+          ).catch(console.error);
+        }
+        return res.status(400).json({
+          error: `Institution limit reached. You can create a maximum of ${maxInstitutions} institution(s) on the ${status.toUpperCase()} tier.`
+        });
+      }
+
       res.status(201).json(await institutionService.create(req.body, creatorId));
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });

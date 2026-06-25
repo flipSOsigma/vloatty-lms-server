@@ -27,6 +27,19 @@ export class UserService {
   }
 
   async getDashboardStats(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { premiumStatus: true }
+    });
+    const status = user?.premiumStatus || "free";
+
+    let maxBytes = 100 * 1024 * 1024; // 100MB default
+    if (status === "pro" || status === "premium") {
+      maxBytes = 500 * 1024 * 1024; // 500MB
+    } else if (status === "max" || status === "professional") {
+      maxBytes = 1024 * 1024 * 1024; // 1GB
+    }
+
     const userSubjects = await prisma.subject.findMany({
       where: { creatorId: userId, deletedAt: null },
       select: { id: true },
@@ -106,7 +119,7 @@ export class UserService {
     return {
       storage: {
         usedBytes: totalUsedBytes,
-        maxBytes: 200 * 1024 * 1024,
+        maxBytes,
         materialsBytes,
         submissionsBytes,
         systemAssetsBytes,

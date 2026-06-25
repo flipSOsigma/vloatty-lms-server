@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Subject Created: {{subjectName}} 📚</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&display=swap');
+      
+      body, table, td, h1, h2, h3, p, a, span, div {
+        font-family: 'Outfit', 'Poppins', system-ui, -apple-system, sans-serif !important;
+      }
+      a:hover {
+        opacity: 0.9 !important;
+      }
+    </style>
+  </head>
+  <body style="margin: 0; padding: 0; background-color: #FAF7F2; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FAF7F2; padding: 40px 10px;">
+      <tr>
+        <td align="center">
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 540px; text-align: center;">
+            
+            <!-- Logo Section -->
+            <tr>
+              <td style="padding: 0 0 30px 0;">
+                <img src="https://j5xs5ezer6.ufs.sh/f/tD2SFM3OFP4Kq3fcEZMB3M5oN6tknUjTQasgFz7GOHRCpLPm" alt="Vloatty Logo" style="height: 38px; display: inline-block; vertical-align: middle; filter: brightness(0);" />
+              </td>
+            </tr>
+
+            <!-- Heading Section -->
+            <tr>
+              <td style="padding: 0 0 20px 0;">
+                <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #121212; letter-spacing: -0.03em;">New Subject Created</h1>
+              </td>
+            </tr>
+            
+            <!-- Description & Info Section -->
+            <tr>
+              <td style="padding: 0 20px 30px 20px; font-size: 15px; line-height: 1.6; color: #374151;">
+                <p style="margin: 0 0 12px 0;">Hello <strong>{{userName}}</strong>,</p>
+                <p style="margin: 0 0 25px 0;">You have successfully created a new subject on Vloatty LMS.</p>
+                
+                <!-- Detail Info Box -->
+                <table border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 30px auto; background-color: #ffffff; border: 1px solid #E5E1D8; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); width: 100%; max-width: 400px; text-align: left;">
+                  <tr>
+                    <td style="padding: 20px 24px;">
+                      <strong style="color: #121212; font-size: 17px; font-weight: 800; display: block; margin-bottom: 12px; text-align: center;">{{subjectName}}</strong>
+                      <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <tr>
+                          <td style="padding: 6px 0; font-weight: 700; color: #121212; width: 80px;">Room:</td>
+                          <td style="padding: 6px 0; color: #4b5563;">{{room}}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 6px 0; font-weight: 700; color: #121212;">Category:</td>
+                          <td style="padding: 6px 0; color: #4b5563;">{{category}}</td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+                <div style="margin-top: 10px;">
+                  <a href="http://localhost:3000/dashboard/subject/{{subjectId}}" style="display: inline-block; padding: 12px 28px; background-color: #facc15; color: #121212; text-decoration: none; border-radius: 14px; font-weight: 700; font-size: 14px; border: 1px solid #eab308; box-shadow: 0 4px 14px rgba(250, 204, 21, 0.25);">Manage Subject</a>
+                </div>
+              </td>
+            </tr>
+            
+            <!-- Black Footer from the Client -->
+            <tr>
+              <td style="padding: 0;">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #000000; padding: 40px 20px; text-align: center; border-radius: 20px;">
+                  <tr>
+                    <td align="center">
+                      <a href="#" style="text-decoration: none; display: inline-block; margin-bottom: 15px;">
+                        <img src="https://j5xs5ezer6.ufs.sh/f/tD2SFM3OFP4Kq3fcEZMB3M5oN6tknUjTQasgFz7GOHRCpLPm" alt="Vloatty" style="height: 22px; display: block;" />
+                      </a>
+                      <p style="margin: 0 auto 20px auto; max-width: 320px; font-size: 13px; line-height: 1.6; color: rgba(255, 255, 255, 0.5);">
+                        Unlock your learning and campus management potential with our unified LMS ecosystem.
+                      </p>
+                      
+                      <table border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 24px auto;">
+                        <tr>
+                          <td style="padding: 0 12px;"><a href="http://localhost:3000/#features" style="color: rgba(255, 255, 255, 0.65); text-decoration: none; font-size: 13px; font-weight: 600;">Features</a></td>
+                          <td style="padding: 0 12px;"><a href="http://localhost:3000/#pricing" style="color: rgba(255, 255, 255, 0.65); text-decoration: none; font-size: 13px; font-weight: 600;">Pricing</a></td>
+                          <td style="padding: 0 12px;"><a href="mailto:support@vloatty.com" style="color: rgba(255, 255, 255, 0.65); text-decoration: none; font-size: 13px; font-weight: 600;">Support</a></td>
+                        </tr>
+                      </table>
+                      
+                      <p style="margin: 0; font-size: 11px; color: rgba(255, 255, 255, 0.35);">
+                        &copy; 2026 Vloatty. All rights reserved. Vloatty Learning Management System.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

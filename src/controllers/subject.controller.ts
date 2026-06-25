@@ -2,6 +2,25 @@ import { Request, Response } from "express";
 import { subjectService } from "../services/subject.service";
 import { AuthenticatedRequest } from "../middlewares/auth.middleware";
 import prisma from "../config/prisma";
+import { MailService } from "../services/mail.service";
+
+function getTierLimits(status: string) {
+  let maxSubjects = 2;
+  let maxModules = 5;
+  let maxLessons = 2;
+  
+  if (status === "pro" || status === "premium") {
+    maxSubjects = 12;
+    maxModules = 10;
+    maxLessons = 3;
+  } else if (status === "max" || status === "professional") {
+    maxSubjects = 25;
+    maxModules = 20;
+    maxLessons = 5;
+  }
+  
+  return { maxSubjects, maxModules, maxLessons };
+}
 
 export class SubjectController {
   async getAll(req: Request, res: Response) {
@@ -24,7 +43,85 @@ export class SubjectController {
 
   async create(req: Request, res: Response) {
     try {
-      res.status(201).json(await subjectService.create(req.body));
+      const userId = (req as AuthenticatedRequest).user?.id;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, name: true, premiumStatus: true }
+      });
+      const status = user?.premiumStatus || "free";
+      const { maxSubjects, maxModules, maxLessons } = getTierLimits(status);
+
+      const createdSubjectsCount = await prisma.subject.count({
+        where: { creatorId: userId, deletedAt: null }
+      });
+
+      if (createdSubjectsCount >= maxSubjects) {
+        if (user) {
+          MailService.sendLimitReachedNotification(
+            user.email,
+            user.name,
+            "Subject Creation",
+            maxSubjects,
+            status
+          ).catch(console.error);
+        }
+        return res.status(400).json({
+          error: `Subject limit reached. You can create a maximum of ${maxSubjects} subjects on the ${status.toUpperCase()} tier.`
+        });
+      }
+
+      if (req.body.modules) {
+        if (req.body.modules.length > maxModules) {
+          if (user) {
+            MailService.sendLimitReachedNotification(
+              user.email,
+              user.name,
+              "Modules per Subject",
+              maxModules,
+              status
+            ).catch(console.error);
+          }
+          return res.status(400).json({
+            error: `Module limit exceeded. Your tier allows a maximum of ${maxModules} modules per subject.`
+          });
+        }
+        for (const m of req.body.modules) {
+          if (m.lessons && m.lessons.length > maxLessons) {
+            if (user) {
+              MailService.sendLimitReachedNotification(
+                user.email,
+                user.name,
+                `Lessons per Module ("${m.title}")`,
+                maxLessons,
+                status
+              ).catch(console.error);
+            }
+            return res.status(400).json({
+              error: `Lesson limit exceeded. Your tier allows a maximum of ${maxLessons} lessons per module (module: "${m.title}").`
+            });
+          }
+        }
+      }
+
+      req.body.createdBy = userId;
+
+      const record = await subjectService.create(req.body);
+
+      // Trigger Subject Creation email
+      if (user?.email && record) {
+        MailService.sendNewSubjectNotification(
+          user.email,
+          user.name,
+          record.id,
+          record.name,
+          record.room,
+          record.category
+        ).catch(console.error);
+      }
+
+      res.status(201).json(record);
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
     }
@@ -47,6 +144,46 @@ export class SubjectController {
 
       if (!isOwner && !isLecturer) {
         return res.status(403).json({ error: "Only the subject creator or lecturer can update this subject." });
+      }
+
+      const owner = await prisma.user.findUnique({
+        where: { id: existing.creatorId },
+        select: { email: true, name: true, premiumStatus: true }
+      });
+      const status = owner?.premiumStatus || "free";
+      const { maxModules, maxLessons } = getTierLimits(status);
+
+      if (req.body.modules) {
+        if (req.body.modules.length > maxModules) {
+          if (owner) {
+            MailService.sendLimitReachedNotification(
+              owner.email,
+              owner.name,
+              "Modules per Subject",
+              maxModules,
+              status
+            ).catch(console.error);
+          }
+          return res.status(400).json({
+            error: `Module limit exceeded. This subject allows a maximum of ${maxModules} modules based on the owner's ${status.toUpperCase()} tier.`
+          });
+        }
+        for (const m of req.body.modules) {
+          if (m.lessons && m.lessons.length > maxLessons) {
+            if (owner) {
+              MailService.sendLimitReachedNotification(
+                owner.email,
+                owner.name,
+                `Lessons per Module ("${m.title}")`,
+                maxLessons,
+                status
+              ).catch(console.error);
+            }
+            return res.status(400).json({
+              error: `Lesson limit exceeded. This subject allows a maximum of ${maxLessons} lessons per module based on the owner's ${status.toUpperCase()} tier (module: "${m.title}").`
+            });
+          }
+        }
       }
 
       // Lecturers cannot change metadata fields

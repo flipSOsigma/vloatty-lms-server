@@ -4,6 +4,8 @@ import { subjectFileService } from "../services/subjectFile.service";
 import { subjectService } from "../services/subject.service";
 import { userService } from "../services/user.service";
 import { AuthenticatedRequest } from "../middlewares/auth.middleware";
+import prisma from "../config/prisma";
+import { MailService } from "../services/mail.service";
 
 async function getSubjectAccess(subjectId: string, userId: string) {
   const subject = await subjectService.getById(subjectId);
@@ -60,6 +62,20 @@ export class SubjectFileController {
       // Check storage limit before invoking UploadThing
       const stats = await userService.getDashboardStats(userId);
       if (stats.storage.usedBytes + file.size > stats.storage.maxBytes) {
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { email: true, name: true, premiumStatus: true }
+        });
+        if (user) {
+          const maxMbStr = `${(stats.storage.maxBytes / (1024 * 1024)).toFixed(0)} MB`;
+          MailService.sendLimitReachedNotification(
+            user.email,
+            user.name,
+            "File Storage Quota",
+            maxMbStr,
+            user.premiumStatus
+          ).catch(console.error);
+        }
         return res.status(400).json({
           error: `Storage limit exceeded. Your file of ${(file.size / (1024 * 1024)).toFixed(2)} MB exceeds your remaining storage quota.`
         });

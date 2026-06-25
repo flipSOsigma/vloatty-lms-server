@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import prisma from "../config/prisma";
 import { AuthenticatedRequest } from "../middlewares/auth.middleware";
+import { MailService } from "../services/mail.service";
 
 const JWT_SECRET = process.env.JWT_SECRET || "super-secret-jwt-key";
 const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || "24h") as jwt.SignOptions["expiresIn"];
@@ -39,6 +40,9 @@ export class AuthController {
         },
       });
 
+      // Send welcome email
+      MailService.sendWelcomeEmail(user.email, user.name).catch(console.error);
+
       const { password: _, ...userWithoutPassword } = user;
       res.status(201).json({
         user: userWithoutPassword,
@@ -62,11 +66,31 @@ export class AuthController {
       const valid = await bcrypt.compare(password, user.password);
       if (!valid) return res.status(401).json({ error: "Invalid email or password" });
 
+      // Send login notification email
+      const ip = (req.headers["x-forwarded-for"] as string || req.socket.remoteAddress || "").split(",")[0].trim();
+      const userAgent = req.headers["user-agent"] || "Unknown Device";
+      MailService.sendLoginNotification(user.email, user.name, ip, userAgent).catch(console.error);
+
       const { password: _, ...userWithoutPassword } = user;
       res.json({
         user: userWithoutPassword,
         jwt: { accessToken: buildToken(user), tokenType: "Bearer", expiresIn: 86400 },
       });
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
+    }
+  }
+
+  async logout(req: Request, res: Response) {
+    try {
+      const authReq = req as AuthenticatedRequest;
+      const user = authReq.user;
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
+
+      const ip = (req.headers["x-forwarded-for"] as string || req.socket.remoteAddress || "").split(",")[0].trim();
+      MailService.sendLogoutNotification(user.email, user.name, ip).catch(console.error);
+
+      res.json({ message: "Logged out successfully" });
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
     }
