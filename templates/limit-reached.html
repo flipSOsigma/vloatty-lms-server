@@ -10,84 +10,155 @@
       body, table, td, h1, h2, h3, p, a, span, div {
         font-family: 'Outfit', 'Poppins', system-ui, -apple-system, sans-serif !important;
       }
-      a:hover {
-        opacity: 0.9 !important;
+      .cta-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.25) !important;
+      }
+      .footer-link:hover {
+        color: #facc15 !important;
       }
     </style>
   </head>
   <body style="margin: 0; padding: 0; background-color: #FAF7F2; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">
-    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FAF7F2; padding: 40px 10px;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FAF7F2; padding: 40px 16px;">
       <tr>
         <td align="center">
-          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 540px; text-align: center;">
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 520px; text-align: center;">
             
             <!-- Logo Section -->
             <tr>
-              <td style="padding: 0 0 30px 0;">
-                <img src="https://j5xs5ezer6.ufs.sh/f/tD2SFM3OFP4Kq3fcEZMB3M5oN6tknUjTQasgFz7GOHRCpLPm" alt="Vloatty Logo" style="height: 38px; display: inline-block; vertical-align: middle; filter: brightness(0);" />
+              <td style="padding: 0 0 20px 0;">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                  <tr>
+                    <td align="center">
+                      <img src="https://j5xs5ezer6.ufs.sh/f/tD2SFM3OFP4Kq3fcEZMB3M5oN6tknUjTQasgFz7GOHRCpLPm" alt="Vloatty Logo" style="height: 34px; display: block; filter: brightness(0);" />
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
 
-            <!-- Heading Section -->
+            <!-- Content Area (Blended with Page) -->
             <tr>
-              <td style="padding: 0 0 20px 0;">
-                <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #dc2626; letter-spacing: -0.03em;">Subscription Limit Warning</h1>
-              </td>
-            </tr>
-            
-            <!-- Description & Info Section -->
-            <tr>
-              <td style="padding: 0 20px 30px 20px; font-size: 15px; line-height: 1.6; color: #374151;">
-                <p style="margin: 0 0 12px 0;">Hello <strong>{{userName}}</strong>,</p>
-                <p style="margin: 0 0 25px 0;">We detected that you hit a resource or storage allocation limit bound to your current premium tier.</p>
+              <td style="padding: 0 10px 30px 10px; text-align: center;">
                 
-                <!-- Detail Info Box -->
-                <table border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 25px auto; background-color: #fef2f2; border: 1px solid #fca5a5; border-radius: 18px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.02); width: 100%; max-width: 400px; text-align: left;">
+                <!-- Limit Reached Pill Badge -->
+                <table border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 16px auto;">
                   <tr>
-                    <td style="padding: 20px 24px;">
-                      <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-                        <tr>
-                          <td style="padding: 6px 0; font-weight: 700; color: #b91c1c; width: 150px;">Limit Type:</td>
-                          <td style="padding: 6px 0; color: #7f1d1d;">{{limitType}}</td>
+                    <td style="background-color: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 99px; padding: 6px 16px;">
+                      <span style="font-size: 11px; font-weight: 800; color: #dc2626; text-transform: uppercase; letter-spacing: 0.08em; display: block; line-height: 1;">
+                        ⚠️ Quota Reached
+                      </span>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Heading Section -->
+                <h1 style="margin: 0 0 12px 0; font-size: 26px; font-weight: 800; color: #dc2626; letter-spacing: -0.03em; line-height: 1.2;">
+                  Subscription Limit Warning
+                </h1>
+                
+                <!-- Intro Paragraph -->
+                <p style="margin: 0 0 24px 0; font-size: 14.5px; line-height: 1.6; color: #4b5563; text-align: center;">
+                  Hello <strong>{{userName}}</strong>, we detected that you hit a resource or storage allocation limit bound to your current subscription plan.
+                </p>
+                
+                <!-- Detail Info Box (Clean Borderless Table with stacked values) -->
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 auto 24px auto; max-width: 400px; text-align: left;">
+                  <tr>
+                    <td style="padding: 10px 0;">
+                      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 13.5px; line-height: 1.6; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid rgba(18, 18, 18, 0.06);">
+                          <td style="padding: 10px 0;">
+                            <span style="font-size: 10.5px; font-weight: 800; color: #71717a; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 2px;">Limit Type</span>
+                            <span style="font-size: 22px; font-weight: 600; color: #b91c1c; display: block;">{{limitType}}</span>
+                          </td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(18, 18, 18, 0.06);">
+                          <td style="padding: 10px 0;">
+                            <span style="font-size: 10.5px; font-weight: 800; color: #71717a; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 2px;">Your Current Tier</span>
+                            <span style="font-size: 22px; font-weight: 600; color: #7f1d1d; display: block; text-transform: uppercase;">{{tier}}</span>
+                          </td>
                         </tr>
                         <tr>
-                          <td style="padding: 6px 0; font-weight: 700; color: #b91c1c;">Your Current Tier:</td>
-                          <td style="padding: 6px 0; color: #7f1d1d; text-transform: uppercase; font-weight: 800;">{{tier}}</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 6px 0; font-weight: 700; color: #b91c1c;">Maximum Allowed:</td>
-                          <td style="padding: 6px 0; color: #7f1d1d; font-weight: 800;">{{currentLimit}}</td>
+                          <td style="padding: 10px 0;">
+                            <span style="font-size: 10.5px; font-weight: 800; color: #71717a; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 2px;">Maximum Allowed</span>
+                            <span style="font-size: 22px; font-weight: 600; color: #7f1d1d; display: block;">{{currentLimit}}</span>
+                          </td>
                         </tr>
                       </table>
                     </td>
                   </tr>
                 </table>
-                <p style="font-weight: 700; color: #121212; margin-bottom: 0;">Need to expand your boundaries? Upgrade to Pro or Max for higher quotas.</p>
-              </td>
-            </tr>
-            
-            <!-- Black Footer from the Client -->
-            <tr>
-              <td style="padding: 0;">
-                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #000000; padding: 40px 20px; text-align: center; border-radius: 20px;">
+
+                <!-- Action Button -->
+                <table border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 24px auto;">
                   <tr>
                     <td align="center">
-                      <a href="#" style="text-decoration: none; display: inline-block; margin-bottom: 15px;">
-                        <img src="https://j5xs5ezer6.ufs.sh/f/tD2SFM3OFP4Kq3fcEZMB3M5oN6tknUjTQasgFz7GOHRCpLPm" alt="Vloatty" style="height: 22px; display: block;" />
+                      <a href="http://localhost:3000/dashboard/profile" class="cta-button" style="display: inline-block; padding: 12px 32px; background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: #ffffff; text-decoration: none; border-radius: 99px; font-weight: 800; font-size: 13.5px; letter-spacing: -0.01em; box-shadow: 0 4px 14px rgba(220, 38, 38, 0.2); transition: all 0.2s ease;">
+                        Upgrade Plan
                       </a>
-                      <p style="margin: 0 auto 20px auto; max-width: 320px; font-size: 13px; line-height: 1.6; color: rgba(255, 255, 255, 0.5);">
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Info Note -->
+                <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                  <tr>
+                    <td align="center">
+                      <p style="margin: 0; font-size: 12.5px; line-height: 1.6; color: #121212; font-weight: 700; max-width: 440px;">
+                        Need to expand your boundaries? Upgrade to Pro or Max for higher quotas.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+              </td>
+            </tr>
+
+            <!-- Spacing -->
+            <tr>
+              <td style="height: 24px;"></td>
+            </tr>
+            
+            <!-- Premium Dark Footer -->
+            <tr>
+              <td style="padding: 0;">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #121212; padding: 36px 32px; text-align: center; border-radius: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.04);">
+                  <tr>
+                    <td align="center">
+                      <!-- Footer Logo -->
+                      <a href="#" style="text-decoration: none; display: inline-block; margin-bottom: 12px;">
+                        <img src="https://j5xs5ezer6.ufs.sh/f/tD2SFM3OFP4Kq3fcEZMB3M5oN6tknUjTQasgFz7GOHRCpLPm" alt="Vloatty" style="height: 20px; display: block; filter: invert(1);" />
+                      </a>
+                      
+                      <!-- Footer Tagline -->
+                      <p style="margin: 0 auto 16px auto; max-width: 320px; font-size: 12px; line-height: 1.6; color: rgba(255, 255, 255, 0.45); font-weight: 500;">
                         Unlock your learning and campus management potential with our unified LMS ecosystem.
                       </p>
                       
-                      <table border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 24px auto;">
+                      <!-- Footer Links -->
+                      <table border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 20px auto;">
                         <tr>
-                          <td style="padding: 0 12px;"><a href="http://localhost:3000/#features" style="color: rgba(255, 255, 255, 0.65); text-decoration: none; font-size: 13px; font-weight: 600;">Features</a></td>
-                          <td style="padding: 0 12px;"><a href="http://localhost:3000/#pricing" style="color: rgba(255, 255, 255, 0.65); text-decoration: none; font-size: 13px; font-weight: 600;">Pricing</a></td>
-                          <td style="padding: 0 12px;"><a href="mailto:support@vloatty.com" style="color: rgba(255, 255, 255, 0.65); text-decoration: none; font-size: 13px; font-weight: 600;">Support</a></td>
+                          <td style="padding: 0 8px;"><a href="http://localhost:3000/#features" class="footer-link" style="color: rgba(255, 255, 255, 0.6); text-decoration: none; font-size: 12px; font-weight: 700; transition: color 0.2s;">Features</a></td>
+                          <td style="padding: 0 8px; color: rgba(255, 255, 255, 0.2); font-size: 12px;">&bull;</td>
+                          <td style="padding: 0 8px;"><a href="http://localhost:3000/#pricing" class="footer-link" style="color: rgba(255, 255, 255, 0.6); text-decoration: none; font-size: 12px; font-weight: 700; transition: color 0.2s;">Pricing</a></td>
+                          <td style="padding: 0 8px; color: rgba(255, 255, 255, 0.2); font-size: 12px;">&bull;</td>
+                          <td style="padding: 0 8px;"><a href="http://localhost:3000/docs" class="footer-link" style="color: rgba(255, 255, 255, 0.6); text-decoration: none; font-size: 12px; font-weight: 700; transition: color 0.2s;">Documentation</a></td>
+                          <td style="padding: 0 8px; color: rgba(255, 255, 255, 0.2); font-size: 12px;">&bull;</td>
+                          <td style="padding: 0 8px;"><a href="mailto:support@vloatty.com" class="footer-link" style="color: rgba(255, 255, 255, 0.6); text-decoration: none; font-size: 12px; font-weight: 700; transition: color 0.2s;">Support</a></td>
+                        </tr>
+                      </table>
+
+                      <!-- Divider -->
+                      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px;">
+                        <tr>
+                          <td style="border-top: 1px solid rgba(255, 255, 255, 0.08); height: 1px; width: 100%;"></td>
                         </tr>
                       </table>
                       
-                      <p style="margin: 0; font-size: 11px; color: rgba(255, 255, 255, 0.35);">
+                      <!-- Copyright -->
+                      <p style="margin: 0; font-size: 11px; color: rgba(255, 255, 255, 0.3); font-weight: 500;">
                         &copy; 2026 Vloatty. All rights reserved. Vloatty Learning Management System.
                       </p>
                     </td>
