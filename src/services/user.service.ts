@@ -40,16 +40,10 @@ export class UserService {
       maxBytes = 1024 * 1024 * 1024; // 1GB
     }
 
-    const userSubjects = await prisma.subject.findMany({
-      where: { creatorId: userId, deletedAt: null },
-      select: { id: true },
-    });
-
-    const subjectIds = userSubjects.map((s) => s.id);
-
+    // Fetch all files uploaded by this specific user to calculate their personal storage quota
     const files = await prisma.subjectFile.findMany({
       where: {
-        subjectId: { in: subjectIds },
+        uploadedById: userId,
         deletedAt: null,
       },
       select: {
@@ -79,7 +73,8 @@ export class UserService {
       where: {
         OR: [
           { creatorId: userId },
-          { lecturers: { some: { userId } } }
+          { lecturers: { some: { userId } } },
+          { participants: { some: { userId } } }
         ],
         updatedAt: { gte: sevenDaysAgo },
         deletedAt: null
@@ -91,7 +86,8 @@ export class UserService {
         subject: {
           OR: [
             { creatorId: userId },
-            { lecturers: { some: { userId } } }
+            { lecturers: { some: { userId } } },
+            { participants: { some: { userId } } }
           ]
         },
         updatedAt: { gte: sevenDaysAgo },
@@ -105,7 +101,8 @@ export class UserService {
           subject: {
             OR: [
               { creatorId: userId },
-              { lecturers: { some: { userId } } }
+              { lecturers: { some: { userId } } },
+              { participants: { some: { userId } } }
             ]
           }
         },
@@ -131,6 +128,60 @@ export class UserService {
         lessons: lessonsCount,
       },
     };
+  }
+
+  async verifyAndResetAiTokens(userId: string): Promise<{ allowed: boolean; balance: number; maxTokens: number }> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { premiumStatus: true, aiTokensBalance: true, aiTokensLastReset: true }
+    });
+    if (!user) {
+      return { allowed: false, balance: 0, maxTokens: 5 };
+    }
+
+    const status = user.premiumStatus || "free";
+    let maxTokens = 5;
+    if (status === "pro" || status === "premium") {
+      maxTokens = 50;
+    } else if (status === "max" || status === "professional") {
+      maxTokens = 200;
+    }
+
+    const now = new Date();
+    const lastReset = new Date(user.aiTokensLastReset);
+
+    let balance = user.aiTokensBalance;
+
+    // Check if the calendar day (in UTC) has changed since the last reset
+    const isNewDay = now.getUTCDate() !== lastReset.getUTCDate() ||
+                     now.getUTCMonth() !== lastReset.getUTCMonth() ||
+                     now.getUTCFullYear() !== lastReset.getUTCFullYear();
+
+    if (isNewDay) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          aiTokensBalance: maxTokens,
+          aiTokensLastReset: now,
+        }
+      });
+      balance = maxTokens;
+    }
+
+    return {
+      allowed: balance > 0,
+      balance,
+      maxTokens,
+    };
+  }
+
+  async deductAiToken(userId: string): Promise<void> {
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        aiTokensBalance: { decrement: 1 }
+      }
+    });
   }
 }
 

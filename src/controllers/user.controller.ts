@@ -35,6 +35,14 @@ export class UserController {
       res.status(500).json({ error: (e as Error).message });
     }
   }
+
+  async getAiTokens(req: Request, res: Response) {
+    try {
+      res.json(await userService.verifyAndResetAiTokens(req.params.id));
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
+    }
+  }
 }
 
 export const userController = new UserController();

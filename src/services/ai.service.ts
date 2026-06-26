@@ -24,7 +24,7 @@ export class AiService {
       ? `This module belongs to the subject "${subjectName}"${subjectDesc ? ` (Description: ${subjectDesc})` : ""}.`
       : "";
 
-    const prompt = `You are an expert curriculum planner. Create a brief, professional, and engaging description for a course module with the title "${title}". ${contextPart} Keep the description concise, informative, and formatted as a short paragraph (1-3 sentences) suitable for a learning management system syllabus.`;
+    const prompt = `You are an expert curriculum planner. Create a brief, professional, and engaging description for a course module with the title "${title}". ${contextPart} Keep the description informative yet easy to read, formatted as a short paragraph of approximately 30 to 50 words (at least 30 words) suitable for a learning management system syllabus.`;
 
     try {
       const response = await this.ai.models.generateContent({
@@ -71,7 +71,7 @@ export class AiService {
       ? `This lesson of type "${type}" belongs to the subject "${subjectName}"${subjectDesc ? ` (Description: ${subjectDesc})` : ""}.`
       : `This lesson is of type "${type}".`;
 
-    const prompt = `You are an expert educational content writer. Create a brief, professional, and engaging description for a lesson/lecture with the title "${title}". ${contextPart} Keep the description concise, informative, and formatted as a short paragraph (1-3 sentences) suitable for a learning management system lesson outline.`;
+    const prompt = `You are an expert educational content writer. Create a brief, professional, and engaging description for a lesson/lecture with the title "${title}". ${contextPart} Keep the description informative yet easy to read, formatted as a short paragraph of approximately 30 to 50 words (at least 30 words) suitable for a learning management system lesson outline.`;
 
     try {
       const response = await this.ai.models.generateContent({
