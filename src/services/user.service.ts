@@ -5,8 +5,41 @@ export class UserService {
     return prisma.user.findUnique({ where: { id } });
   }
 
-  updateProfile(id: string, data: { name?: string; institution?: string; avatar?: string }) {
+  updateProfile(id: string, data: { name?: string; institution?: string; avatar?: string; banner?: string | null }) {
     return prisma.user.update({ where: { id }, data });
+  }
+
+  async getUserFiles(userId: string) {
+    const subjectFiles = await prisma.subjectFile.findMany({
+      where: { uploadedById: userId, deletedAt: null },
+      include: {
+        subject: {
+          select: {
+            id: true,
+            name: true,
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+
+    const institutionFiles = await prisma.institutionFile.findMany({
+      where: { uploadedById: userId, deletedAt: null },
+      include: {
+        institution: {
+          select: {
+            id: true,
+            name: true,
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+
+    return {
+      subjectFiles,
+      institutionFiles
+    };
   }
 
   getAllUsers() {

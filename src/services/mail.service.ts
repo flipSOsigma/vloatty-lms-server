@@ -1,6 +1,4 @@
 import nodemailer from "nodemailer";
-import fs from "fs";
-import path from "path";
 
 const SMTP_HOST = process.env.SMTP_HOST;
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587", 10);
@@ -64,28 +62,44 @@ function getEmailLayout(title: string, contentHtml: string): string {
                   </td>
                 </tr>
                 
-                <!-- Black Footer from the Client -->
+                <!-- Premium Dark Footer -->
                 <tr>
                   <td style="padding: 0;">
-                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #000000; padding: 40px 20px; text-align: center; border-radius: 20px;">
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #121212; padding: 36px 32px; text-align: center; border-radius: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.04);">
                       <tr>
                         <td align="center">
-                          <a href="#" style="text-decoration: none; display: inline-block; margin-bottom: 15px;">
-                            <img src="https://j5xs5ezer6.ufs.sh/f/tD2SFM3OFP4Kq3fcEZMB3M5oN6tknUjTQasgFz7GOHRCpLPm" alt="Vloatty" style="height: 22px; display: block;" />
+                          <!-- Footer Logo -->
+                          <a href="#" style="text-decoration: none; display: inline-block; margin-bottom: 12px;">
+                            <img src="https://j5xs5ezer6.ufs.sh/f/tD2SFM3OFP4Kq3fcEZMB3M5oN6tknUjTQasgFz7GOHRCpLPm" alt="Vloatty" style="height: 20px; display: block; filter: invert(1);" />
                           </a>
-                          <p style="margin: 0 auto 20px auto; max-width: 320px; font-size: 13px; line-height: 1.6; color: rgba(255, 255, 255, 0.5);">
+                          
+                          <!-- Footer Tagline -->
+                          <p style="margin: 0 auto 16px auto; max-width: 320px; font-size: 12px; line-height: 1.6; color: rgba(255, 255, 255, 0.45); font-weight: 500;">
                             Unlock your learning and campus management potential with our unified LMS ecosystem.
                           </p>
                           
-                          <table border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 24px auto;">
+                          <!-- Footer Links -->
+                          <table border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 20px auto;">
                             <tr>
-                              <td style="padding: 0 12px;"><a href="http://localhost:3000/#features" style="color: rgba(255, 255, 255, 0.65); text-decoration: none; font-size: 13px; font-weight: 600;">Features</a></td>
-                              <td style="padding: 0 12px;"><a href="http://localhost:3000/#pricing" style="color: rgba(255, 255, 255, 0.65); text-decoration: none; font-size: 13px; font-weight: 600;">Pricing</a></td>
-                              <td style="padding: 0 12px;"><a href="mailto:support@vloatty.com" style="color: rgba(255, 255, 255, 0.65); text-decoration: none; font-size: 13px; font-weight: 600;">Support</a></td>
+                              <td style="padding: 0 8px;"><a href="http://localhost:3000/#features" style="color: rgba(255, 255, 255, 0.6); text-decoration: none; font-size: 12px; font-weight: 700;">Features</a></td>
+                              <td style="padding: 0 8px; color: rgba(255, 255, 255, 0.2); font-size: 12px;">&bull;</td>
+                              <td style="padding: 0 8px;"><a href="http://localhost:3000/#pricing" style="color: rgba(255, 255, 255, 0.6); text-decoration: none; font-size: 12px; font-weight: 700;">Pricing</a></td>
+                              <td style="padding: 0 8px; color: rgba(255, 255, 255, 0.2); font-size: 12px;">&bull;</td>
+                              <td style="padding: 0 8px;"><a href="http://localhost:3000/docs" style="color: rgba(255, 255, 255, 0.6); text-decoration: none; font-size: 12px; font-weight: 700;">Documentation</a></td>
+                              <td style="padding: 0 8px; color: rgba(255, 255, 255, 0.2); font-size: 12px;">&bull;</td>
+                              <td style="padding: 0 8px;"><a href="mailto:support@vloatty.com" style="color: rgba(255, 255, 255, 0.6); text-decoration: none; font-size: 12px; font-weight: 700;">Support</a></td>
+                            </tr>
+                          </table>
+
+                          <!-- Divider -->
+                          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px;">
+                            <tr>
+                              <td style="border-top: 1px solid rgba(255, 255, 255, 0.08); height: 1px; width: 100%;"></td>
                             </tr>
                           </table>
                           
-                          <p style="margin: 0; font-size: 11px; color: rgba(255, 255, 255, 0.35);">
+                          <!-- Copyright -->
+                          <p style="margin: 0; font-size: 11px; color: rgba(255, 255, 255, 0.3); font-weight: 500;">
                             &copy; 2026 Vloatty. All rights reserved. Vloatty Learning Management System.
                           </p>
                         </td>
@@ -102,22 +116,7 @@ function getEmailLayout(title: string, contentHtml: string): string {
   `;
 }
 
-// Loads HTML templates from the server/templates folder with replacement placeholders
-function getTemplateHtml(templateName: string, placeholders: Record<string, string | number>, fallbackHtml: string): string {
-  try {
-    const templatePath = path.join(process.cwd(), "templates", `${templateName}.html`);
-    if (fs.existsSync(templatePath)) {
-      let html = fs.readFileSync(templatePath, "utf8");
-      for (const [key, value] of Object.entries(placeholders)) {
-        html = html.replace(new RegExp(`{{${key}}}`, "g"), String(value ?? ""));
-      }
-      return html;
-    }
-  } catch (err) {
-    console.error(`Failed to load template ${templateName}:`, err);
-  }
-  return fallbackHtml;
-}
+
 
 export class MailService {
   static async sendMail(to: string, subject: string, text: string, html?: string, attachments?: any[]) {
@@ -157,8 +156,7 @@ export class MailService {
       </div>
       `
     );
-    const html = getTemplateHtml("welcome", { userName }, fallback);
-    return this.sendMail(to, subject, text, html);
+    return this.sendMail(to, subject, text, fallback);
   }
 
   // Template 2: Logged in session
@@ -169,30 +167,38 @@ export class MailService {
     const fallback = getEmailLayout(
       subject,
       `
+      <div style="max-width: 220px; margin: 0 auto 24px auto; border-radius: 16px; overflow: hidden;">
+        <div class="tenor-gif-embed" data-postid="14651250" data-share-method="host" data-aspect-ratio="2.02532" data-width="100%"><a href="https://tenor.com/view/tease-anime-darth-vader-light-saber-gif-14651250">Tease Anime GIF</a>from <a href="https://tenor.com/search/tease-gifs">Tease GIFs</a></div> <script type="text/javascript" async src="https://tenor.com/embed.js"></script>
+      </div>
       <h3 style="color: #121212; font-size: 18px; font-weight: 800; margin-top: 0; letter-spacing: -0.02em;">New Sign-in Detected 🔑</h3>
       <p>Hello <strong>${userName}</strong>,</p>
       <p>We detected a successful login to your Vloatty LMS account.</p>
-      <div style="background-color: #f9f8f6; border: 1px solid #E5E1D8; border-radius: 16px; padding: 16px; margin: 20px 0;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-          <tr>
-            <td style="padding: 6px 0; font-weight: 700; color: #121212; width: 100px;">Time:</td>
-            <td style="padding: 6px 0; color: #4b5563;">${time}</td>
-          </tr>
-          <tr>
-            <td style="padding: 6px 0; font-weight: 700; color: #121212;">IP Address:</td>
-            <td style="padding: 6px 0; color: #4b5563;">${ip}</td>
-          </tr>
-          <tr>
-            <td style="padding: 6px 0; font-weight: 700; color: #121212;">Device:</td>
-            <td style="padding: 6px 0; color: #4b5563; word-break: break-all;">${userAgent}</td>
-          </tr>
-        </table>
-      </div>
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 20px auto; max-width: 480px; text-align: left;">
+        <tr>
+          <td style="padding: 10px 0;">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 13.5px; line-height: 1.6; border-collapse: collapse;">
+              <tr>
+                <td valign="top" style="padding: 10px 12px 10px 0; width: 33%;">
+                  <span style="font-size: 10.5px; font-weight: 800; color: #71717a; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 2px;">Time</span>
+                  <span style="font-size: 22px; font-weight: 600; color: #121212; display: block; line-height: 1.2;">${time}</span>
+                </td>
+                <td valign="top" style="padding: 10px 12px; width: 33%;">
+                  <span style="font-size: 10.5px; font-weight: 800; color: #71717a; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 2px;">IP Address</span>
+                  <span style="font-size: 22px; font-weight: 600; color: #121212; display: block; font-family: monospace; line-height: 1.2;">${ip}</span>
+                </td>
+                <td valign="top" style="padding: 10px 0 10px 12px; width: 34%;">
+                  <span style="font-size: 10.5px; font-weight: 800; color: #71717a; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 2px;">Device</span>
+                  <span style="font-size: 18px; font-weight: 600; color: #121212; display: block; word-break: break-word; line-height: 1.3;">${userAgent}</span>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
       <p style="font-size: 12px; color: #ef4444; font-weight: 750; margin-bottom: 0;">If this wasn't you, please secure your account immediately by resetting your password.</p>
       `
     );
-    const html = getTemplateHtml("login", { userName, time, ip, userAgent }, fallback);
-    return this.sendMail(to, subject, text, html);
+    return this.sendMail(to, subject, text, fallback);
   }
 
   // Template 3: Logged out session
@@ -206,22 +212,27 @@ export class MailService {
       <h3 style="color: #121212; font-size: 18px; font-weight: 800; margin-top: 0; letter-spacing: -0.02em;">Session Signed Out 👋</h3>
       <p>Hello <strong>${userName}</strong>,</p>
       <p>You have successfully logged out of your current Vloatty LMS session.</p>
-      <div style="background-color: #f9f8f6; border: 1px solid #E5E1D8; border-radius: 16px; padding: 16px; margin: 20px 0;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-          <tr>
-            <td style="padding: 6px 0; font-weight: 700; color: #121212; width: 100px;">Time:</td>
-            <td style="padding: 6px 0; color: #4b5563;">${time}</td>
-          </tr>
-          <tr>
-            <td style="padding: 6px 0; font-weight: 700; color: #121212;">IP Address:</td>
-            <td style="padding: 6px 0; color: #4b5563;">${ip}</td>
-          </tr>
-        </table>
-      </div>
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 20px auto; max-width: 440px; text-align: left;">
+        <tr>
+          <td style="padding: 10px 0;">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 13.5px; line-height: 1.6; border-collapse: collapse;">
+              <tr>
+                <td valign="top" style="padding: 10px 12px 10px 0; width: 50%;">
+                  <span style="font-size: 10.5px; font-weight: 800; color: #71717a; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 2px;">Time</span>
+                  <span style="font-size: 22px; font-weight: 600; color: #121212; display: block; line-height: 1.2;">${time}</span>
+                </td>
+                <td valign="top" style="padding: 10px 0 10px 12px; width: 50%;">
+                  <span style="font-size: 10.5px; font-weight: 800; color: #71717a; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 2px;">IP Address</span>
+                  <span style="font-size: 22px; font-weight: 600; color: #121212; display: block; font-family: monospace; line-height: 1.2;">${ip}</span>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
       `
     );
-    const html = getTemplateHtml("logout", { userName, time, ip }, fallback);
-    return this.sendMail(to, subject, text, html);
+    return this.sendMail(to, subject, text, fallback);
   }
 
   // Template 4: Got new subject created
@@ -234,37 +245,33 @@ export class MailService {
       <h3 style="color: #121212; font-size: 18px; font-weight: 800; margin-top: 0; letter-spacing: -0.02em;">New Subject Created 📚</h3>
       <p>Hello <strong>${userName}</strong>,</p>
       <p>You have successfully created a new subject on Vloatty LMS.</p>
-      <div style="background-color: #fbfbfa; border-left: 4px solid #d97706; padding: 20px; margin: 20px 0; border-radius: 4px 18px 18px 4px; border-top: 1px solid #E5E1D8; border-right: 1px solid #E5E1D8; border-bottom: 1px solid #E5E1D8; box-shadow: 0 4px 12px rgba(0,0,0,0.015);">
-        <strong style="color: #121212; font-size: 17px; font-weight: 800; display: block; margin-bottom: 8px;">${subjectName}</strong>
-        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+      <div style="margin: 20px 0; text-align: left;">
+        <strong style="color: #121212; font-size: 17px; font-weight: 800; display: block; margin-bottom: 16px; text-align: center;">${subjectName}</strong>
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 auto; max-width: 440px;">
           <tr>
-            <td style="padding: 4px 0; font-weight: 700; color: #121212; width: 80px;">Room:</td>
-            <td style="padding: 4px 0; color: #4b5563;">${room || "N/A"}</td>
+            <td style="padding: 10px 0;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 13.5px; line-height: 1.6; border-collapse: collapse;">
+                <tr>
+                  <td valign="top" style="padding: 10px 12px 10px 0; width: 50%;">
+                    <span style="font-size: 10.5px; font-weight: 800; color: #71717a; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 2px;">Room</span>
+                    <span style="font-size: 22px; font-weight: 600; color: #121212; display: block; line-height: 1.2;">${room || "N/A"}</span>
+                  </td>
+                  <td valign="top" style="padding: 10px 0 10px 12px; width: 50%;">
+                    <span style="font-size: 10.5px; font-weight: 800; color: #71717a; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 2px;">Category</span>
+                    <span style="font-size: 22px; font-weight: 600; color: #121212; display: block; line-height: 1.2;">${category || "N/A"}</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
           </tr>
-          ${category ? `
-          <tr>
-            <td style="padding: 4px 0; font-weight: 700; color: #121212;">Category:</td>
-            <td style="padding: 4px 0; color: #4b5563;">${category}</td>
-          </tr>` : ""}
         </table>
       </div>
-      <div style="margin-top: 30px; text-align: center;">
-        <a href="http://localhost:3000/dashboard/subject/${subjectId}" style="display: inline-block; padding: 12px 28px; background-color: #facc15; color: #121212; text-decoration: none; border-radius: 14px; font-weight: 700; font-size: 14px; border: 1px solid #eab308; box-shadow: 0 4px 14px rgba(250, 204, 21, 0.25);">Manage Subject</a>
+      <div style="margin-top: 24px; text-align: center;">
+        <a href="http://localhost:3000/dashboard/subject/${subjectId}" style="display: inline-block; padding: 12px 32px; background: linear-gradient(135deg, #facc15 0%, #d97706 100%); color: #ffffff; text-decoration: none; border-radius: 99px; font-weight: 800; font-size: 13.5px; letter-spacing: -0.01em; box-shadow: 0 4px 14px rgba(217, 119, 6, 0.2); transition: all 0.2s ease;">Manage Subject</a>
       </div>
       `
     );
-    const html = getTemplateHtml(
-      "new-subject",
-      {
-        userName,
-        subjectId,
-        subjectName,
-        room: room || "N/A",
-        category: category || "N/A"
-      },
-      fallback
-    );
-    return this.sendMail(to, subject, text, html);
+    return this.sendMail(to, subject, text, fallback);
   }
 
   // Template 5: Got new module added
@@ -277,27 +284,32 @@ export class MailService {
       <h3 style="color: #121212; font-size: 18px; font-weight: 800; margin-top: 0; letter-spacing: -0.02em;">New Module Added 📁</h3>
       <p>Hello <strong>${userName}</strong>,</p>
       <p>A new module has been published in your subject <strong>${subjectName}</strong>.</p>
-      <div style="background-color: #fbfbfa; border-left: 4px solid #d97706; padding: 20px; margin: 20px 0; border-radius: 4px 18px 18px 4px; border-top: 1px solid #E5E1D8; border-right: 1px solid #E5E1D8; border-bottom: 1px solid #E5E1D8; box-shadow: 0 4px 12px rgba(0,0,0,0.015);">
-        <strong style="color: #121212; font-size: 16px; font-weight: 800; display: block; margin-bottom: 6px;">${moduleTitle}</strong>
-        ${moduleDesc ? `<p style="margin: 0; font-size: 13px; color: #4b5563; line-height: 1.5;">${moduleDesc}</p>` : `<p style="margin: 0; font-size: 13px; color: #9ca3af; font-style: italic;">No description provided.</p>`}
+      <div style="margin: 20px 0; text-align: left;">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 auto; max-width: 460px;">
+          <tr>
+            <td style="padding: 10px 0;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 13.5px; line-height: 1.6; border-collapse: collapse;">
+                <tr>
+                  <td valign="top" style="padding: 10px 12px 10px 0; width: 50%;">
+                    <span style="font-size: 10.5px; font-weight: 800; color: #71717a; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 2px;">Module Title</span>
+                    <span style="font-size: 22px; font-weight: 600; color: #121212; display: block; line-height: 1.2;">${moduleTitle}</span>
+                  </td>
+                  <td valign="top" style="padding: 10px 0 10px 12px; width: 50%;">
+                    <span style="font-size: 10.5px; font-weight: 800; color: #71717a; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 2px;">Description</span>
+                    <span style="font-size: 14px; font-weight: 500; color: #52525b; display: block; line-height: 1.4;">${moduleDesc || "No description provided."}</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
       </div>
-      <div style="margin-top: 30px; text-align: center;">
-        <a href="http://localhost:3000/dashboard/subject/${subjectId}" style="display: inline-block; padding: 12px 28px; background-color: #facc15; color: #121212; text-decoration: none; border-radius: 14px; font-weight: 700; font-size: 14px; border: 1px solid #eab308; box-shadow: 0 4px 14px rgba(250, 204, 21, 0.25);">Open Course Page</a>
+      <div style="margin-top: 24px; text-align: center;">
+        <a href="http://localhost:3000/dashboard/subject/${subjectId}" style="display: inline-block; padding: 12px 32px; background: linear-gradient(135deg, #facc15 0%, #d97706 100%); color: #ffffff; text-decoration: none; border-radius: 99px; font-weight: 800; font-size: 13.5px; letter-spacing: -0.01em; box-shadow: 0 4px 14px rgba(217, 119, 6, 0.2); transition: all 0.2s ease;">Open Course Page</a>
       </div>
       `
     );
-    const html = getTemplateHtml(
-      "new-module",
-      {
-        userName,
-        subjectId,
-        subjectName,
-        moduleTitle,
-        moduleDesc: moduleDesc || "No description provided."
-      },
-      fallback
-    );
-    return this.sendMail(to, subject, text, html);
+    return this.sendMail(to, subject, text, fallback);
   }
 
   // Template 6: Got new lesson for any type of lesson
@@ -339,38 +351,58 @@ export class MailService {
                     <td style="padding: 0 20px 30px 20px; font-size: 15px; line-height: 1.6; color: #374151;">
                       <p>Hello <strong>${userName}</strong>,</p>
                       <p>A new lesson has been added under your subject <strong>${subjectName}</strong>.</p>
-                      <table border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 30px auto; background-color: #ffffff; border: 1px solid #E5E1D8; border-radius: 16px; width: 100%; max-width: 400px; text-align: left;">
+                      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 auto 24px auto; max-width: 440px; text-align: left;">
                         <tr>
-                          <td style="padding: 20px 24px;">
-                            <strong style="color: #121212; font-size: 16px; font-weight: 700; display: block; margin-bottom: 12px; text-align: center;">${lessonTitle}</strong>
-                            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                          <td style="padding: 10px 0;">
+                            <strong style="color: #121212; font-size: 17px; font-weight: 800; display: block; margin-bottom: 16px; text-align: center;">${lessonTitle}</strong>
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 13.5px; line-height: 1.6; border-collapse: collapse;">
                               <tr>
-                                <td style="padding: 6px 0; font-weight: 700; color: #121212; width: 80px;">Module:</td>
-                                <td style="padding: 6px 0; color: #4b5563;">${moduleTitle}</td>
-                              </tr>
-                              <tr>
-                                <td style="padding: 6px 0; font-weight: 700; color: #121212;">Type:</td>
-                                <td style="padding: 6px 0; color: #4b5563; text-transform: capitalize;">${lessonType}</td>
+                                <td valign="top" style="padding: 10px 12px 10px 0; width: 50%;">
+                                  <span style="font-size: 10.5px; font-weight: 800; color: #71717a; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 2px;">Module</span>
+                                  <span style="font-size: 22px; font-weight: 600; color: #121212; display: block; line-height: 1.2;">${moduleTitle}</span>
+                                </td>
+                                <td valign="top" style="padding: 10px 0 10px 12px; width: 50%;">
+                                  <span style="font-size: 10.5px; font-weight: 800; color: #71717a; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 2px;">Type</span>
+                                  <span style="font-size: 22px; font-weight: 600; color: #121212; display: block; text-transform: capitalize; line-height: 1.2;">${lessonType}</span>
+                                </td>
                               </tr>
                             </table>
                           </td>
                         </tr>
                       </table>
-                      <div style="margin-top: 10px;">
-                        <a href="http://localhost:3000/dashboard/subject/${subjectId}" style="display: inline-block; padding: 12px 28px; background-color: #facc15; color: #121212; text-decoration: none; border-radius: 14px; font-weight: 700; font-size: 14px; border: 1px solid #eab308;">View Lesson</a>
+                      <div style="margin-top: 24px; text-align: center;">
+                        <a href="http://localhost:3000/dashboard/subject/${subjectId}" style="display: inline-block; padding: 12px 32px; background: linear-gradient(135deg, #facc15 0%, #d97706 100%); color: #ffffff; text-decoration: none; border-radius: 99px; font-weight: 800; font-size: 13.5px; letter-spacing: -0.01em; box-shadow: 0 4px 14px rgba(217, 119, 6, 0.2); transition: all 0.2s ease;">View Lesson</a>
                       </div>
                     </td>
                   </tr>
                   <tr>
                     <td style="padding: 0;">
-                      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #000000; padding: 40px 20px; text-align: center; border-radius: 20px;">
+                      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #121212; padding: 36px 32px; text-align: center; border-radius: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.04);">
                         <tr>
                           <td align="center">
-                            <img src="https://j5xs5ezer6.ufs.sh/f/tD2SFM3OFP4Kq3fcEZMB3M5oN6tknUjTQasgFz7GOHRCpLPm" alt="Vloatty" style="height: 22px; display: block; margin-bottom: 15px;" />
-                            <p style="margin: 0 auto 20px auto; max-width: 320px; font-size: 13px; line-height: 1.6; color: rgba(255, 255, 255, 0.5);">
+                            <a href="#" style="text-decoration: none; display: inline-block; margin-bottom: 12px;">
+                              <img src="https://j5xs5ezer6.ufs.sh/f/tD2SFM3OFP4Kq3fcEZMB3M5oN6tknUjTQasgFz7GOHRCpLPm" alt="Vloatty" style="height: 20px; display: block; filter: invert(1);" />
+                            </a>
+                            <p style="margin: 0 auto 16px auto; max-width: 320px; font-size: 12px; line-height: 1.6; color: rgba(255, 255, 255, 0.45); font-weight: 500;">
                               Unlock your learning and campus management potential with our unified LMS ecosystem.
                             </p>
-                            <p style="margin: 0; font-size: 11px; color: rgba(255, 255, 255, 0.35);">
+                            <table border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 20px auto;">
+                              <tr>
+                                <td style="padding: 0 8px;"><a href="http://localhost:3000/#features" style="color: rgba(255, 255, 255, 0.6); text-decoration: none; font-size: 12px; font-weight: 700;">Features</a></td>
+                                <td style="padding: 0 8px; color: rgba(255, 255, 255, 0.2); font-size: 12px;">&bull;</td>
+                                <td style="padding: 0 8px;"><a href="http://localhost:3000/#pricing" style="color: rgba(255, 255, 255, 0.6); text-decoration: none; font-size: 12px; font-weight: 700;">Pricing</a></td>
+                                <td style="padding: 0 8px; color: rgba(255, 255, 255, 0.2); font-size: 12px;">&bull;</td>
+                                <td style="padding: 0 8px;"><a href="http://localhost:3000/docs" style="color: rgba(255, 255, 255, 0.6); text-decoration: none; font-size: 12px; font-weight: 700;">Documentation</a></td>
+                                <td style="padding: 0 8px; color: rgba(255, 255, 255, 0.2); font-size: 12px;">&bull;</td>
+                                <td style="padding: 0 8px;"><a href="mailto:support@vloatty.com" style="color: rgba(255, 255, 255, 0.6); text-decoration: none; font-size: 12px; font-weight: 700;">Support</a></td>
+                              </tr>
+                            </table>
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px;">
+                              <tr>
+                                <td style="border-top: 1px solid rgba(255, 255, 255, 0.08); height: 1px; width: 100%;"></td>
+                              </tr>
+                            </table>
+                            <p style="margin: 0; font-size: 11px; color: rgba(255, 255, 255, 0.3); font-weight: 500;">
                               &copy; 2026 Vloatty. All rights reserved. Vloatty Learning Management System.
                             </p>
                           </td>
@@ -386,20 +418,7 @@ export class MailService {
       </html>
     `;
 
-    const html = getTemplateHtml(
-      "new-lesson",
-      {
-        userName,
-        subjectId,
-        subjectName,
-        moduleTitle,
-        lessonTitle,
-        lessonType
-      },
-      fallback
-    );
-
-    return this.sendMail(to, subject, text, html);
+    return this.sendMail(to, subject, text, fallback);
   }
 
   // Template 7: Notification of tier limit reached
@@ -412,26 +431,31 @@ export class MailService {
       <h3 style="color: #dc2626; font-size: 18px; font-weight: 800; margin-top: 0; letter-spacing: -0.02em;">⚠️ Subscription Limit Warning</h3>
       <p>Hello <strong>${userName}</strong>,</p>
       <p>We detected that you hit a resource or storage allocation limit bound to your current premium tier.</p>
-      <div style="background-color: #fef2f2; border: 1px solid #fca5a5; border-radius: 18px; padding: 20px; margin: 20px 0; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.02);">
-        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-          <tr>
-            <td style="padding: 6px 0; font-weight: 700; color: #b91c1c; width: 150px;">Limit Type:</td>
-            <td style="padding: 6px 0; color: #7f1d1d;">${limitType}</td>
-          </tr>
-          <tr>
-            <td style="padding: 6px 0; font-weight: 700; color: #b91c1c;">Your Current Tier:</td>
-            <td style="padding: 6px 0; color: #7f1d1d; text-transform: uppercase; font-weight: 800;">${tier}</td>
-          </tr>
-          <tr>
-            <td style="padding: 6px 0; font-weight: 700; color: #b91c1c;">Maximum Allowed:</td>
-            <td style="padding: 6px 0; color: #7f1d1d; font-weight: 800;">${currentLimit}</td>
-          </tr>
-        </table>
-      </div>
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 20px auto; max-width: 480px; text-align: left;">
+        <tr>
+          <td style="padding: 10px 0;">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 13.5px; line-height: 1.6; border-collapse: collapse;">
+              <tr>
+                <td valign="top" style="padding: 10px 12px 10px 0; width: 33%;">
+                  <span style="font-size: 10.5px; font-weight: 800; color: #71717a; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 2px;">Limit Type</span>
+                  <span style="font-size: 22px; font-weight: 600; color: #b91c1c; display: block; line-height: 1.2;">${limitType}</span>
+                </td>
+                <td valign="top" style="padding: 10px 12px; width: 33%;">
+                  <span style="font-size: 10.5px; font-weight: 800; color: #71717a; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 2px;">Your Current Tier</span>
+                  <span style="font-size: 22px; font-weight: 600; color: #7f1d1d; display: block; text-transform: uppercase; line-height: 1.2;">${tier}</span>
+                </td>
+                <td valign="top" style="padding: 10px 0 10px 12px; width: 34%;">
+                  <span style="font-size: 10.5px; font-weight: 800; color: #71717a; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 2px;">Maximum Allowed</span>
+                  <span style="font-size: 22px; font-weight: 600; color: #7f1d1d; display: block; line-height: 1.2;">${currentLimit}</span>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
       <p style="font-weight: 700; color: #121212; margin-bottom: 0;">Need to expand your boundaries? Upgrade to Pro or Max for higher quotas.</p>
       `
     );
-    const html = getTemplateHtml("limit-reached", { userName, limitType, tier, currentLimit }, fallback);
-    return this.sendMail(to, subject, text, html);
+    return this.sendMail(to, subject, text, fallback);
   }
 }

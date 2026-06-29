@@ -9,10 +9,17 @@ export class UploadController {
 
       const subjectId = (req.query.subjectId as string) || (req.body.subjectId as string);
       const institutionId = (req.query.institutionId as string) || (req.body.institutionId as string);
+      const userId = (req.query.userId as string) || (req.body.userId as string);
+      const uploadType = (req.query.type as string) || (req.body.type as string); // 'avatar' | 'banner'
 
-      const fileName = institutionId
-        ? `institution-thumbnail-${institutionId}.webp`
-        : `subject-thumbnail-${subjectId || Math.random().toString(36).slice(2, 15)}.webp`;
+      let fileName = `file-${Math.random().toString(36).slice(2, 15)}.webp`;
+      if (institutionId) {
+        fileName = `institution-thumbnail-${institutionId}.webp`;
+      } else if (subjectId) {
+        fileName = `subject-thumbnail-${subjectId || Math.random().toString(36).slice(2, 15)}.webp`;
+      } else if (userId && uploadType) {
+        fileName = `user-${uploadType}-${userId}-${Math.random().toString(36).slice(2, 6)}.webp`;
+      }
 
       const img = sharp(req.file.buffer);
       let quality = 80;
@@ -35,6 +42,7 @@ export class UploadController {
 
       res.status(200).json({ url: result.data?.url ?? "" });
     } catch (e) {
+      console.error("Upload error details:", e);
       res.status(500).json({ error: (e as Error).message });
     }
   }

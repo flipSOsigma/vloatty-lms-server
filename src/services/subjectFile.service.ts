@@ -17,7 +17,7 @@ export class SubjectFileService {
     category: "Attachment" | "Submission";
     uploadedById: string;
     subjectId: string;
-    lessonId: string;
+    lessonId?: string | null;
   }) {
     return prisma.subjectFile.create({ data });
   }

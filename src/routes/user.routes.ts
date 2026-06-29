@@ -7,6 +7,7 @@ const router = Router();
 router.get("/", userController.getAllUsers.bind(userController));
 router.get("/:id/dashboard-stats", authMiddleware, userController.getDashboardStats.bind(userController));
 router.get("/:id/ai-tokens", authMiddleware, userController.getAiTokens.bind(userController));
+router.get("/:id/files", authMiddleware, userController.getUserFiles.bind(userController));
 router.get("/:id", userController.getProfile.bind(userController));
 router.put("/:id", userController.updateProfile.bind(userController));
 

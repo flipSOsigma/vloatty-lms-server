@@ -101,7 +101,7 @@ export class SubjectFileController {
         category,
         uploadedById: userId,
         subjectId,
-        lessonId,
+        lessonId: (lessonId === "null" || lessonId === "undefined" || !lessonId) ? null : lessonId,
       });
 
       res.status(201).json(record);

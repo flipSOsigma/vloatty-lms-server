@@ -8,7 +8,12 @@ const SUBJECT_INCLUDE = {
   schedules: true,
   modules: {
     where: { deletedAt: null as null },
-    include: { lessons: { where: { deletedAt: null as null } } },
+    include: {
+      lessons: {
+        where: { deletedAt: null as null },
+        include: { files: { where: { deletedAt: null as null } } }
+      }
+    },
   },
 } as const;
 
