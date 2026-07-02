@@ -14,14 +14,7 @@ export interface AuthenticatedRequest extends Request {
 }
 
 function decodeToken(token: string) {
-  try {
-    return jwt.verify(token, JWT_SECRET) as AuthenticatedRequest["user"];
-  } catch {
-    if (token.endsWith("mockSignatureHere123456789012345678901234567890")) {
-      return jwt.decode(token) as AuthenticatedRequest["user"];
-    }
-    throw new Error("Invalid token");
-  }
+  return jwt.verify(token, JWT_SECRET) as AuthenticatedRequest["user"];
 }
 
 export function authMiddleware(req: Request, res: Response, next: NextFunction) {

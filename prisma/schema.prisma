@@ -15,8 +15,11 @@ model User {
   premiumStatus    String            @default("free")
   institution      String
   avatar           String
+  banner           String?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
+  aiTokensBalance   Int               @default(5)
+  aiTokensLastReset DateTime          @default(now())
   createdSubjects  Subject[]         @relation("SubjectCreator")
   lecturedSubjects SubjectLecturer[]
   participatedSubjects SubjectParticipant[]

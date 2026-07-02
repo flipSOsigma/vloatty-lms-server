@@ -1,4 +1,5 @@
 import prisma from "../config/prisma";
+import { MailService } from "./mail.service";
 
 const SUBJECT_INCLUDE = {
   creator: { select: { name: true, email: true, avatar: true } },
@@ -7,7 +8,12 @@ const SUBJECT_INCLUDE = {
   schedules: true,
   modules: {
     where: { deletedAt: null as null },
-    include: { lessons: { where: { deletedAt: null as null } } },
+    include: {
+      lessons: {
+        where: { deletedAt: null as null },
+        include: { files: { where: { deletedAt: null as null } } }
+      }
+    },
   },
 } as const;
 
@@ -195,6 +201,9 @@ export class SubjectService {
         }
 
         for (const m of modules) {
+          const existingModule = m.id ? await tx.module.findFirst({ where: { id: m.id, deletedAt: null } }) : null;
+          const isNewModule = !existingModule;
+
           const moduleData = {
             title: m.title,
             desc: m.desc ?? "",
@@ -205,6 +214,45 @@ export class SubjectService {
             update: moduleData,
             create: { id: m.id, ...moduleData, subjectId: id },
           });
+
+          if (isNewModule) {
+            // Send email notification to creator and all participants
+            const subjInfo = await tx.subject.findUnique({
+              where: { id },
+              include: {
+                creator: true,
+                participants: { include: { user: true } }
+              }
+            });
+
+            if (subjInfo) {
+              // Notify creator
+              if (subjInfo.creator?.email) {
+                MailService.sendNewModuleNotification(
+                  subjInfo.creator.email,
+                  subjInfo.creator.name,
+                  subjInfo.id,
+                  subjInfo.name,
+                  m.title,
+                  m.desc
+                ).catch(console.error);
+              }
+
+              // Notify all enrolled participants
+              for (const p of subjInfo.participants || []) {
+                if (p.user?.email) {
+                  MailService.sendNewModuleNotification(
+                    p.user.email,
+                    p.user.name,
+                    subjInfo.id,
+                    subjInfo.name,
+                    m.title,
+                    m.desc
+                  ).catch(console.error);
+                }
+              }
+            }
+          }
 
           if (m.lessons) {
             const dbLessons = await tx.lesson.findMany({ where: { moduleId: m.id, deletedAt: null } });
@@ -219,6 +267,9 @@ export class SubjectService {
             }
 
             for (const l of m.lessons) {
+              const existingLesson = l.id ? await tx.lesson.findFirst({ where: { id: l.id, deletedAt: null } }) : null;
+              const isNew = !existingLesson;
+
               const lessonData = {
                 title: l.title,
                 desc: l.desc ?? "",
@@ -233,6 +284,47 @@ export class SubjectService {
                 update: lessonData,
                 create: { id: l.id, ...lessonData, moduleId: m.id },
               });
+
+              if (isNew) {
+                // Send email notification to creator and all participants
+                const subjInfo = await tx.subject.findUnique({
+                  where: { id },
+                  include: {
+                    creator: true,
+                    participants: { include: { user: true } }
+                  }
+                });
+
+                if (subjInfo) {
+                  // Notify creator
+                  if (subjInfo.creator?.email) {
+                    MailService.sendNewLessonNotification(
+                      subjInfo.creator.email,
+                      subjInfo.creator.name,
+                      subjInfo.id,
+                      subjInfo.name,
+                      m.title,
+                      l.title,
+                      l.type ?? "learning"
+                    ).catch(console.error);
+                  }
+
+                  // Notify all enrolled participants
+                  for (const p of subjInfo.participants || []) {
+                    if (p.user?.email) {
+                      MailService.sendNewLessonNotification(
+                        p.user.email,
+                        p.user.name,
+                        subjInfo.id,
+                        subjInfo.name,
+                        m.title,
+                        l.title,
+                        l.type ?? "learning"
+                      ).catch(console.error);
+                    }
+                  }
+                }
+              }
             }
           }
         }

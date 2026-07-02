@@ -19,17 +19,46 @@ function isInstructor(subject: { creatorId: string; lecturers: { userId: string 
   return subject.creatorId === userId || subject.lecturers.some((l) => l.userId === userId);
 }
 
+async function verifyUserEnrollment(lessonId: string, userId: string | undefined, allowGuest: boolean): Promise<boolean> {
+  if (!userId) {
+    return allowGuest;
+  }
+
+  const subject = await getSubjectForLesson(lessonId);
+  if (!subject) return false;
+
+  const instructor = isInstructor(subject, userId);
+  if (instructor) return true;
+
+  const enrolled = await prisma.subjectParticipant.findUnique({
+    where: {
+      subjectId_userId: {
+        subjectId: subject.id,
+        userId,
+      },
+    },
+  });
+  if (enrolled) return true;
+
+  return allowGuest;
+}
+
 export class QuizController {
   static async getQuiz(req: Request, res: Response) {
     try {
       const { lessonId } = req.params;
       const quiz = await QuizService.getQuizByLessonId(lessonId);
       if (!quiz) return res.status(404).json({ error: "Quiz not found" });
- 
+
       const authReq = req as AuthenticatedRequest;
+      const isAllowed = await verifyUserEnrollment(lessonId, authReq.user?.id, quiz.allowGuest);
+      if (!isAllowed) {
+        return res.status(403).json({ error: "Access denied. You are not enrolled in this course." });
+      }
+
       let userAttempt: any = null;
       let canSeeAnswers = false;
- 
+
       if (authReq.user?.id) {
         userAttempt = await prisma.quizAttempt.findFirst({
           where: { quizId: quiz.id, userId: authReq.user.id },
@@ -37,7 +66,7 @@ export class QuizController {
         const subject = await getSubjectForLesson(lessonId);
         if (subject) canSeeAnswers = isInstructor(subject, authReq.user.id);
       }
- 
+
       if (!canSeeAnswers) {
         const safeQuestions = quiz.questions.map(({ correctOption: _c, ...q }) => q);
         if (userAttempt && quiz.allowViewGrade) {
@@ -51,7 +80,7 @@ export class QuizController {
         }
         return res.json({ ...quiz, questions: safeQuestions, userAttempt });
       }
- 
+
       return res.json({ ...quiz, userAttempt });
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
@@ -87,6 +116,11 @@ export class QuizController {
 
       const quiz = await QuizService.getQuizByLessonId(lessonId);
       if (!quiz) return res.status(404).json({ error: "Quiz not found" });
+
+      const isAllowed = await verifyUserEnrollment(lessonId, userId, quiz.allowGuest);
+      if (!isAllowed) {
+        return res.status(403).json({ error: "Access denied. You are not enrolled in this course." });
+      }
 
       if (userId) {
         const existingAttempt = await prisma.quizAttempt.findFirst({
@@ -169,6 +203,11 @@ export class QuizController {
       if (!quiz) return res.status(404).json({ error: "Quiz not found" });
 
       const authReq = req as AuthenticatedRequest;
+      const isAllowed = await verifyUserEnrollment(lessonId, authReq.user?.id, quiz.allowGuest);
+      if (!isAllowed) {
+        return res.status(403).json({ error: "Access denied. You are not enrolled in this course." });
+      }
+
       let canView = quiz.showLeaderboard;
 
       if (authReq.user?.id) {

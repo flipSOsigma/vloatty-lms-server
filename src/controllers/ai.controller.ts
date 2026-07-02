@@ -1,9 +1,23 @@
 import { Request, Response } from "express";
 import { aiService } from "../services/ai.service";
+import { userService } from "../services/user.service";
 
 export class AiController {
   async generateModuleDescription(req: Request, res: Response) {
     try {
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const tokenCheck = await userService.verifyAndResetAiTokens(userId);
+      if (!tokenCheck.allowed) {
+        return res.status(403).json({
+          error: "Limit Reached",
+          message: "You have run out of daily AI tokens. Upgrade your plan or wait for the daily reset."
+        });
+      }
+
       const { title, subjectName, subjectDesc } = req.body;
       if (!title || typeof title !== "string" || !title.trim()) {
         return res.status(400).json({ error: "Module title is required" });
@@ -15,6 +29,8 @@ export class AiController {
         subjectDesc
       );
 
+      await userService.deductAiToken(userId);
+
       res.json({ description });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
@@ -23,6 +39,19 @@ export class AiController {
 
   async generateLessonDescription(req: Request, res: Response) {
     try {
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const tokenCheck = await userService.verifyAndResetAiTokens(userId);
+      if (!tokenCheck.allowed) {
+        return res.status(403).json({
+          error: "Limit Reached",
+          message: "You have run out of daily AI tokens. Upgrade your plan or wait for the daily reset."
+        });
+      }
+
       const { title, type, subjectName, subjectDesc } = req.body;
       if (!title || typeof title !== "string" || !title.trim()) {
         return res.status(400).json({ error: "Lesson title is required" });
@@ -35,6 +64,8 @@ export class AiController {
         subjectDesc
       );
 
+      await userService.deductAiToken(userId);
+
       res.json({ description });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
@@ -43,6 +74,19 @@ export class AiController {
 
   async generateQuiz(req: Request, res: Response) {
     try {
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const tokenCheck = await userService.verifyAndResetAiTokens(userId);
+      if (!tokenCheck.allowed) {
+        return res.status(403).json({
+          error: "Limit Reached",
+          message: "You have run out of daily AI tokens. Upgrade your plan or wait for the daily reset."
+        });
+      }
+
       const { lessonTitle, lessonDesc, subjectName, subjectDesc, questionCount, difficulty, language } = req.body;
       if (!lessonTitle || typeof lessonTitle !== "string" || !lessonTitle.trim()) {
         return res.status(400).json({ error: "Lesson title is required" });
@@ -57,6 +101,8 @@ export class AiController {
         difficulty || "medium",
         language || "English"
       );
+
+      await userService.deductAiToken(userId);
 
       res.json({ questions });
     } catch (e: any) {
