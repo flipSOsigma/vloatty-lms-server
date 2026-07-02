@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { userService } from "../services/user.service";
+import { AuthenticatedRequest } from "../middlewares/auth.middleware";
 
 export class UserController {
   async getProfile(req: Request, res: Response) {
@@ -14,6 +15,10 @@ export class UserController {
 
   async updateProfile(req: Request, res: Response) {
     try {
+      const authId = (req as AuthenticatedRequest).user?.id;
+      if (!authId || authId !== req.params.id) {
+        return res.status(403).json({ error: "Access denied. You can only update your own profile." });
+      }
       res.json(await userService.updateProfile(req.params.id, req.body));
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
@@ -30,6 +35,10 @@ export class UserController {
 
   async getDashboardStats(req: Request, res: Response) {
     try {
+      const authId = (req as AuthenticatedRequest).user?.id;
+      if (!authId || authId !== req.params.id) {
+        return res.status(403).json({ error: "Access denied." });
+      }
       res.json(await userService.getDashboardStats(req.params.id));
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
@@ -38,6 +47,10 @@ export class UserController {
 
   async getAiTokens(req: Request, res: Response) {
     try {
+      const authId = (req as AuthenticatedRequest).user?.id;
+      if (!authId || authId !== req.params.id) {
+        return res.status(403).json({ error: "Access denied." });
+      }
       res.json(await userService.verifyAndResetAiTokens(req.params.id));
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
@@ -46,6 +59,10 @@ export class UserController {
 
   async getUserFiles(req: Request, res: Response) {
     try {
+      const authId = (req as AuthenticatedRequest).user?.id;
+      if (!authId || authId !== req.params.id) {
+        return res.status(403).json({ error: "Access denied." });
+      }
       res.json(await userService.getUserFiles(req.params.id));
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
