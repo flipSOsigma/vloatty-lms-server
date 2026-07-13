@@ -124,6 +124,7 @@ async function main() {
                 id: les.id,
                 title: les.title,
                 desc: les.desc,
+                content: les.content || null,
                 homeworkFile: les.homeworkFile,
                 openDate: new Date(les.openDate),
                 closeDate: new Date(les.closeDate),

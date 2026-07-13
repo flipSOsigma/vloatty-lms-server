@@ -3,7 +3,7 @@ import { MailService } from "./mail.service";
 
 const SUBJECT_INCLUDE = {
   creator: { select: { name: true, email: true, avatar: true } },
-  lecturers: { include: { user: { select: { name: true, email: true } } } },
+  lecturers: { include: { user: { select: { name: true, email: true, avatar: true } } } },
   participants: { include: { user: { select: { name: true, email: true, avatar: true } } } },
   schedules: true,
   modules: {
@@ -19,8 +19,8 @@ const SUBJECT_INCLUDE = {
 
 function mapSubject(subject: Awaited<ReturnType<typeof prisma.subject.findFirst>> & {
   creator?: { name: string; email: string; avatar: string } | null;
-  lecturers?: { userId: string; user?: { name: string; email: string } | null }[];
-  participants?: { userId: string; user?: { name: string; email: string; avatar: string } | null }[];
+  lecturers?: { userId: string; user?: { name: string; email: string; avatar: string } | null }[];
+  participants?: { userId: string; createdAt: Date; user?: { name: string; email: string; avatar: string } | null }[];
 }) {
   if (!subject) return null;
   const { creatorId, creator, lecturers, participants, ...rest } = subject;
@@ -34,12 +34,14 @@ function mapSubject(subject: Awaited<ReturnType<typeof prisma.subject.findFirst>
       userId: sl.userId,
       name: sl.user?.name ?? "",
       email: sl.user?.email ?? "",
+      avatar: sl.user?.avatar ?? "",
     })),
     participants: (participants ?? []).map((p) => ({
       userId: p.userId,
       name: p.user?.name ?? "",
       email: p.user?.email ?? "",
       avatar: p.user?.avatar ?? "",
+      joinedAt: p.createdAt.toISOString(),
     })),
   };
 }
@@ -66,7 +68,7 @@ async function resolveLecturerIds(lecturers: { email?: string; name?: string }[]
     const user = await findOrCreateUser(lec.email, lec.name);
     ids.push(user.id);
   }
-  return ids;
+  return Array.from(new Set(ids));
 }
 
 export class SubjectService {
@@ -143,6 +145,7 @@ export class SubjectService {
         id: string;
         title: string;
         desc?: string;
+        content?: string | null;
         type?: string;
         homeworkFile?: string | null;
         openDate?: string;
@@ -273,6 +276,7 @@ export class SubjectService {
               const lessonData = {
                 title: l.title,
                 desc: l.desc ?? "",
+                content: l.content ?? null,
                 type: l.type ?? "learning",
                 homeworkFile: l.homeworkFile ?? null,
                 openDate: l.openDate ? new Date(l.openDate) : new Date(),
@@ -359,6 +363,32 @@ export class SubjectService {
       create: { subjectId, userId },
     });
     return this.getById(subjectId);
+  }
+
+  async leaveSubject(subjectId: string, userId: string) {
+    const subject = await prisma.subject.findUnique({
+      where: { id: subjectId },
+      select: { creatorId: true }
+    });
+    
+    if (!subject) {
+      throw new Error("Subject not found");
+    }
+    
+    if (subject.creatorId === userId) {
+      throw new Error("The creator of the subject cannot leave it.");
+    }
+
+    await prisma.$transaction([
+      prisma.subjectParticipant.deleteMany({
+        where: { subjectId, userId }
+      }),
+      prisma.subjectLecturer.deleteMany({
+        where: { subjectId, userId }
+      })
+    ]);
+    
+    return { message: "Successfully left the subject" };
   }
 }
 

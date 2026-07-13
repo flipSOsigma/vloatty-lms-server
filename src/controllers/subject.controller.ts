@@ -249,6 +249,19 @@ export class SubjectController {
       res.status(500).json({ error: (e as Error).message });
     }
   }
+
+  async leave(req: Request, res: Response) {
+    try {
+      const subjectId = req.params.id;
+      const userId = (req as AuthenticatedRequest).user?.id;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const result = await subjectService.leaveSubject(subjectId, userId);
+      res.json(result);
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
+    }
+  }
 }
 
 export const subjectController = new SubjectController();
