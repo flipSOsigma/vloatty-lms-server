@@ -95,6 +95,7 @@ model Lesson {
   id           String    @id @default(uuid())
   title        String
   desc         String    @db.Text
+  content      String?   @db.Text
   type         String    @default("learning")
   homeworkFile String?
   openDate     DateTime

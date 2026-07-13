@@ -2,9 +2,9 @@ import prisma from "../config/prisma";
 import { MailService } from "./mail.service";
 
 const SUBJECT_INCLUDE = {
-  creator: { select: { name: true, email: true, avatar: true } },
-  lecturers: { include: { user: { select: { name: true, email: true } } } },
-  participants: { include: { user: { select: { name: true, email: true, avatar: true } } } },
+  creator: { select: { name: true, email: true, avatar: true, banner: true } },
+  lecturers: { include: { user: { select: { name: true, email: true, avatar: true, banner: true } } } },
+  participants: { include: { user: { select: { name: true, email: true, avatar: true, banner: true } } } },
   schedules: true,
   modules: {
     where: { deletedAt: null as null },
@@ -18,9 +18,9 @@ const SUBJECT_INCLUDE = {
 } as const;
 
 function mapSubject(subject: Awaited<ReturnType<typeof prisma.subject.findFirst>> & {
-  creator?: { name: string; email: string; avatar: string } | null;
-  lecturers?: { userId: string; user?: { name: string; email: string } | null }[];
-  participants?: { userId: string; user?: { name: string; email: string; avatar: string } | null }[];
+  creator?: { name: string; email: string; avatar: string; banner?: string | null } | null;
+  lecturers?: { userId: string; user?: { name: string; email: string; avatar: string; banner?: string | null } | null }[];
+  participants?: { userId: string; createdAt: Date; user?: { name: string; email: string; avatar: string; banner?: string | null } | null }[];
 }) {
   if (!subject) return null;
   const { creatorId, creator, lecturers, participants, ...rest } = subject;
@@ -30,16 +30,21 @@ function mapSubject(subject: Awaited<ReturnType<typeof prisma.subject.findFirst>
     creatorName: creator?.name ?? "",
     creatorEmail: creator?.email ?? "",
     creatorAvatar: creator?.avatar ?? "",
+    creatorBanner: creator?.banner ?? "",
     lecturers: (lecturers ?? []).map((sl) => ({
       userId: sl.userId,
       name: sl.user?.name ?? "",
       email: sl.user?.email ?? "",
+      avatar: sl.user?.avatar ?? "",
+      banner: sl.user?.banner ?? "",
     })),
     participants: (participants ?? []).map((p) => ({
       userId: p.userId,
       name: p.user?.name ?? "",
       email: p.user?.email ?? "",
       avatar: p.user?.avatar ?? "",
+      banner: p.user?.banner ?? "",
+      joinedAt: p.createdAt.toISOString(),
     })),
   };
 }
@@ -66,7 +71,7 @@ async function resolveLecturerIds(lecturers: { email?: string; name?: string }[]
     const user = await findOrCreateUser(lec.email, lec.name);
     ids.push(user.id);
   }
-  return ids;
+  return Array.from(new Set(ids));
 }
 
 export class SubjectService {
@@ -143,6 +148,7 @@ export class SubjectService {
         id: string;
         title: string;
         desc?: string;
+        content?: string | null;
         type?: string;
         homeworkFile?: string | null;
         openDate?: string;
@@ -273,6 +279,7 @@ export class SubjectService {
               const lessonData = {
                 title: l.title,
                 desc: l.desc ?? "",
+                content: l.content ?? null,
                 type: l.type ?? "learning",
                 homeworkFile: l.homeworkFile ?? null,
                 openDate: l.openDate ? new Date(l.openDate) : new Date(),
@@ -359,6 +366,32 @@ export class SubjectService {
       create: { subjectId, userId },
     });
     return this.getById(subjectId);
+  }
+
+  async leaveSubject(subjectId: string, userId: string) {
+    const subject = await prisma.subject.findUnique({
+      where: { id: subjectId },
+      select: { creatorId: true }
+    });
+    
+    if (!subject) {
+      throw new Error("Subject not found");
+    }
+    
+    if (subject.creatorId === userId) {
+      throw new Error("The creator of the subject cannot leave it.");
+    }
+
+    await prisma.$transaction([
+      prisma.subjectParticipant.deleteMany({
+        where: { subjectId, userId }
+      }),
+      prisma.subjectLecturer.deleteMany({
+        where: { subjectId, userId }
+      })
+    ]);
+    
+    return { message: "Successfully left the subject" };
   }
 }
 

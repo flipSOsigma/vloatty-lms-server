@@ -6,7 +6,7 @@ import { AuthenticatedRequest } from "../middlewares/auth.middleware";
 import { MailService } from "../services/mail.service";
 
 const JWT_SECRET = process.env.JWT_SECRET || "super-secret-jwt-key";
-const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || "24h") as jwt.SignOptions["expiresIn"];
+const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN) as jwt.SignOptions["expiresIn"];
 
 function buildToken(user: { id: string; name: string; email: string; premiumStatus: string; institution: string }) {
   return jwt.sign(

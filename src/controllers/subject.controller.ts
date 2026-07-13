@@ -249,6 +249,65 @@ export class SubjectController {
       res.status(500).json({ error: (e as Error).message });
     }
   }
+
+  async updateParticipantRole(req: Request, res: Response) {
+    try {
+      const subjectId = req.params.id;
+      const userId = req.params.userId;
+      const { role } = req.body;
+      const ownerId = (req as AuthenticatedRequest).user?.id;
+
+      const subject = await prisma.subject.findFirst({ where: { id: subjectId, creatorId: ownerId } });
+      if (!subject) {
+        return res.status(403).json({ error: "Only the subject creator can modify roles." });
+      }
+
+      if (subject.creatorId === userId) {
+        return res.status(400).json({ error: "Cannot change the role of the subject owner." });
+      }
+
+      const targetRole = role === "Student" ? "Participant" : role;
+
+      if (targetRole === "Lecturer") {
+        await prisma.$transaction([
+          prisma.subjectParticipant.deleteMany({ where: { subjectId, userId } }),
+          prisma.subjectLecturer.upsert({
+            where: { subjectId_userId: { subjectId, userId } },
+            update: {},
+            create: { subjectId, userId },
+          }),
+        ]);
+      } else if (targetRole === "Participant") {
+        await prisma.$transaction([
+          prisma.subjectLecturer.deleteMany({ where: { subjectId, userId } }),
+          prisma.subjectParticipant.upsert({
+            where: { subjectId_userId: { subjectId, userId } },
+            update: {},
+            create: { subjectId, userId },
+          }),
+        ]);
+      } else {
+        return res.status(400).json({ error: "Invalid role specified." });
+      }
+
+      res.json({ message: "Participant role updated successfully" });
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
+    }
+  }
+
+  async leave(req: Request, res: Response) {
+    try {
+      const subjectId = req.params.id;
+      const userId = (req as AuthenticatedRequest).user?.id;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const result = await subjectService.leaveSubject(subjectId, userId);
+      res.json(result);
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
+    }
+  }
 }
 
 export const subjectController = new SubjectController();
