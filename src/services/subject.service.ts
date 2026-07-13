@@ -2,9 +2,9 @@ import prisma from "../config/prisma";
 import { MailService } from "./mail.service";
 
 const SUBJECT_INCLUDE = {
-  creator: { select: { name: true, email: true, avatar: true } },
-  lecturers: { include: { user: { select: { name: true, email: true, avatar: true } } } },
-  participants: { include: { user: { select: { name: true, email: true, avatar: true } } } },
+  creator: { select: { name: true, email: true, avatar: true, banner: true } },
+  lecturers: { include: { user: { select: { name: true, email: true, avatar: true, banner: true } } } },
+  participants: { include: { user: { select: { name: true, email: true, avatar: true, banner: true } } } },
   schedules: true,
   modules: {
     where: { deletedAt: null as null },
@@ -18,9 +18,9 @@ const SUBJECT_INCLUDE = {
 } as const;
 
 function mapSubject(subject: Awaited<ReturnType<typeof prisma.subject.findFirst>> & {
-  creator?: { name: string; email: string; avatar: string } | null;
-  lecturers?: { userId: string; user?: { name: string; email: string; avatar: string } | null }[];
-  participants?: { userId: string; createdAt: Date; user?: { name: string; email: string; avatar: string } | null }[];
+  creator?: { name: string; email: string; avatar: string; banner?: string | null } | null;
+  lecturers?: { userId: string; user?: { name: string; email: string; avatar: string; banner?: string | null } | null }[];
+  participants?: { userId: string; createdAt: Date; user?: { name: string; email: string; avatar: string; banner?: string | null } | null }[];
 }) {
   if (!subject) return null;
   const { creatorId, creator, lecturers, participants, ...rest } = subject;
@@ -30,17 +30,20 @@ function mapSubject(subject: Awaited<ReturnType<typeof prisma.subject.findFirst>
     creatorName: creator?.name ?? "",
     creatorEmail: creator?.email ?? "",
     creatorAvatar: creator?.avatar ?? "",
+    creatorBanner: creator?.banner ?? "",
     lecturers: (lecturers ?? []).map((sl) => ({
       userId: sl.userId,
       name: sl.user?.name ?? "",
       email: sl.user?.email ?? "",
       avatar: sl.user?.avatar ?? "",
+      banner: sl.user?.banner ?? "",
     })),
     participants: (participants ?? []).map((p) => ({
       userId: p.userId,
       name: p.user?.name ?? "",
       email: p.user?.email ?? "",
       avatar: p.user?.avatar ?? "",
+      banner: p.user?.banner ?? "",
       joinedAt: p.createdAt.toISOString(),
     })),
   };
