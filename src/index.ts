@@ -6,12 +6,27 @@ import apiRouter from "./routes";
 const app = express();
 const port = process.env.PORT || 5000;
 
-const allowedOrigins = ["https://vloatty.vercel.app", "http://localhost:3000", "http://127.0.0.1:3000"];
+const allowedOrigins = [
+  "https://vloatty.vercel.app", 
+  "http://localhost:3000", 
+  "http://127.0.0.1:3000"
+];
 
 app.use(cors({
-  origin: allowedOrigins,
+  // Dynamically check origins to allow Vercel preview branches
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  // Explicitly allow common headers needed for JSON and Auth
+  allowedHeaders: ["Content-Type", "Authorization", "Accept"] 
 }));
 
 app.use(express.json());
